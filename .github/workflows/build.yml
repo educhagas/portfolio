@@ -1,0 +1,76 @@
+name: Build
+
+on:
+  push:
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/build.yml'
+  pull_request:
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/build.yml'
+
+jobs:
+  Build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # see: https://github.com/actions/virtual-environments
+          - {
+            name: "Ubuntu / GCC 10",
+            os: ubuntu-20.04,
+            config: Release,
+            cxx_standard: 20,
+            cmake_extra_args: "-DCMAKE_C_COMPILER=/usr/bin/gcc-10 -DCMAKE_CXX_COMPILER=/usr/bin/g++-10  -DCMAKE_CXX_FLAGS=\"-O2\"",
+            sudocmd: "sudo",
+            artifact_name: "Linux",
+            cores: 2,
+          }
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update GCC
+        if: matrix.config.os == 'ubuntu-20.04'
+        run: |
+          sudo apt-get install -y g++-10 g++-10-multilib
+          name=CC::gcc-10
+          name=CXX::g++-10
+      - name: Create Work Dir
+        run: mkdir build
+      - name: Configure Build Script
+        working-directory: ./build
+        run: |
+          cmake .. ${{ matrix.config.cmake_extra_args }} -DCMAKE_BUILD_TYPE=${{ matrix.config.config }}
+      - name: Build All Targets
+        working-directory: ./build
+        run: cmake --build . -j ${{ matrix.config.cores }} --config ${{ matrix.config.config }}
+      - name: Test
+        working-directory: ./build
+        run: ctest -j ${{ matrix.config.cores }} -C ${{ matrix.config.config }}
+      - name: Install
+        working-directory: ./build
+        run: ${{ matrix.config.sudocmd }} cmake --install .
+      - name: Create packages
+        working-directory: ./build
+        run: ${{ matrix.config.sudocmd }} cpack
+      - name: Archive Installer Packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: Binary Packages ${{ matrix.config.artifact_name }}
+          path: build/portfolio-?.?.?-*.*
+      - name: Archive Installer Packages as is
+        uses: kittaakos/upload-artifact-as-is@v0
+        with:
+          path: build/portfolio-?.?.?-*.*
