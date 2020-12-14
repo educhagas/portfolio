@@ -5,13 +5,17 @@
 #ifndef PORTFOLIO_DATA_FEED_H
 #define PORTFOLIO_DATA_FEED_H
 
-#include <string_view>
+#include "date/date.h"
 #include <portfolio/data_feed/data_feed_result.h>
+#include <string_view>
 
 namespace portfolio {
     class data_feed {
-    public:
+      public:
         virtual data_feed_result fetch(std::string_view asset_code) = 0;
+        virtual data_feed_result fetch_from(std::string_view asset_code,
+                                            date::year_month_day from_date,
+                                            date::year_month_day to_date) = 0;
     };
 }
 
