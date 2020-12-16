@@ -16,10 +16,15 @@ namespace portfolio {
 
     double data_feed_result::price_from_date(date::year_month_day date) const {
         auto it = historical_data_.lower_bound(date);
-        if (it == historical_data_.end())
-            return historical_data_.rbegin()->second;
-        else
+        if (historical_data_.end() != historical_data_.find(date) ||
+            it == historical_data_.begin()) {
             return (*it).second;
+        } else if (it == historical_data_.end()) {
+            return historical_data_.rbegin()->second;
+        } else {
+            it--;
+            return (*it).second;
+        }
     }
 
     data_feed_result::data_feed_result(
