@@ -12,10 +12,9 @@
 namespace portfolio {
     class data_feed {
       public:
-        virtual data_feed_result fetch(std::string_view asset_code) = 0;
-        virtual data_feed_result fetch_from(std::string_view asset_code,
-                                            date::year_month_day from_date,
-                                            date::year_month_day to_date) = 0;
+        virtual data_feed_result fetch(std::string_view asset_code,
+                                       date::year_month_day from_date,
+                                       date::year_month_day to_date) = 0;
     };
 }
 
