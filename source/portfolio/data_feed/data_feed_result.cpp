@@ -8,16 +8,26 @@ namespace portfolio {
     double data_feed_result::current_price() const { return current_price_; }
 
     double data_feed_result::price(date::year_month_day date) const {
-        auto it = historical_data_.lower_bound(date);
-
-        if (historical_data_.end() != historical_data_.find(date) ||
-            it == historical_data_.begin()) {
+        auto it = historical_data_.find(date);
+        // if date is founded
+        if (it != historical_data_.end()) {
             return (*it).second;
-        } else if (it == historical_data_.end()) {
-            return historical_data_.rbegin()->second;
         } else {
-            it--;
-            return (*it).second;
+            it = historical_data_.lower_bound(date);
+            if (it == historical_data_.begin()) {
+                // if date is lower than oldest date in historical
+                // returns the oldest price in historical
+                return historical_data_.cbegin()->second;
+            } else if (it == historical_data_.end()) {
+                // if the date is higher than the newest date in historical
+                // returns the newest price in historical
+                return historical_data_.rbegin()->second;
+            } else {
+                // if the date is weekend day
+                // returns the price of the previous day in historical
+                it--;
+                return (*it).second;
+            }
         }
     }
 

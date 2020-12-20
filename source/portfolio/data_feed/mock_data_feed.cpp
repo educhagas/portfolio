@@ -3,7 +3,6 @@
 //
 
 #include "mock_data_feed.h"
-#include <iostream>
 #include <random>
 
 using day_point =
@@ -47,15 +46,11 @@ namespace portfolio {
                 double volatility = (ud_double(generator) - 1) * 5;
                 side < 30 ? current_price *= 1 - (volatility / 100)
                           : current_price *= 1 + (volatility / 100);
-                if (current_price > 0) { // no negatives prices
-                    historical[date::year_month_day(i)] = current_price;
-                } else {
-                    historical[date::year_month_day(i)] = 0;
-                }
+                // no negatives prices
+                current_price > 0
+                    ? historical[date::year_month_day(i)] = current_price
+                    : historical[date::year_month_day(i)] = 0;
             }
-        }
-        for (auto p : historical) {
-            std::cout << p.first << " - " << p.second << std::endl;
         }
         return historical;
     }

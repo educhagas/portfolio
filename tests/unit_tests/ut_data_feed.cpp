@@ -22,5 +22,5 @@ TEST_CASE("Data Feed") {
 
     // If request the price of a weekend day returns the price of Friday.
     REQUIRE(r.price(2019_y / 01 / 05) == r.price(2019_y / 01 / 04));
-    REQUIRE(r.price(2020_y / 01 / 04) == r.price(2020_y / 01 / 06));
+    REQUIRE(r.price(2019_y / 01 / 06) == r.price(2019_y / 01 / 04));
 }
