@@ -5,21 +5,34 @@
 #ifndef PORTFOLIO_DATA_FEED_RESULT_H
 #define PORTFOLIO_DATA_FEED_RESULT_H
 
-#include "date/date.h"
+#include <chrono>
+#include <date/date.h>
 #include <map>
 
 namespace portfolio {
     class data_feed_result {
       public /* constructors */:
         explicit data_feed_result(
-            const std::map<date::year_month_day, double> &historical_data);
+            std::map<std::chrono::time_point<std::chrono::system_clock,
+                                             std::chrono::minutes>,
+                     double>
+                historical_data);
       public /* getters and setters */:
-        [[nodiscard]] double current_price() const;
-        [[nodiscard]] double price(date::year_month_day date) const;
+        [[maybe_unused]] [[nodiscard]] double lastest_price() const;
+        [[nodiscard]] double
+        price_from(std::chrono::time_point<std::chrono::system_clock,
+                                           std::chrono::minutes>
+                       date_time) const;
+        [[nodiscard]] double
+        closest_price(std::chrono::time_point<std::chrono::system_clock,
+                                              std::chrono::minutes>
+                          date_time) const;
 
       private:
-        double current_price_;
-        std::map<date::year_month_day, double> historical_data_;
+        std::map<std::chrono::time_point<std::chrono::system_clock,
+                                         std::chrono::minutes>,
+                 double>
+            historical_data_;
     };
 }
 
