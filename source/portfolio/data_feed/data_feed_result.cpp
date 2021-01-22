@@ -34,7 +34,7 @@ namespace portfolio {
         auto it = historical_data_.find(date_time);
         const bool date_time_is_found = it != historical_data_.end();
         if (date_time_is_found) {
-            return (*it).second;
+            return it->second;
         } else {
             it = historical_data_.lower_bound(date_time);
             if (it == historical_data_.begin()) {
@@ -52,5 +52,8 @@ namespace portfolio {
                 return it->second;
             }
         }
+    }
+    bool data_feed_result::historical_data_is_empty() {
+        return historical_data_.empty();
     }
 } // namespace portfolio

@@ -3,35 +3,49 @@
 #include <catch2/catch.hpp>
 #include <chrono>
 #include <portfolio/data_feed/mock_data_feed.h>
+TEST_CASE("Mock Data Feed"){
+    using namespace portfolio;
+    using namespace date::literals;
+    using namespace std::chrono_literals;
+    mock_data_feed m1;
+    data_feed_result r_daily =
+        m1.fetch("PETR4", date::sys_days{2019_y / 1 /1} + 10h + 0min,
+                date::sys_days{2019_y / 12 / 31} + 18h + 0min,
+                timeframe::daily);
+    //If start_period is less then end_period historical_data is not empty
+    REQUIRE(r_daily.historical_data_is_empty() == false);
 
+    mock_data_feed m2;
+    data_feed_result r_daily2 =
+        m2.fetch("PETR4", date::sys_days{2019_y / 12 / 31} + 10h + 0min,
+                 date::sys_days{2019_y / 1 /1} + 18h + 0min,
+                 timeframe::daily);
+    //If start_period is greater then end_period historical_data is not empty
+    REQUIRE(r_daily2.historical_data_is_empty() == true);
+}
 TEST_CASE("Data Feed") {
     using namespace portfolio;
     using namespace date::literals;
     using namespace std::chrono_literals;
     mock_data_feed m;
 
-    data_feed_result r_daily =
-        m.fetch("PETR4", date::sys_days{date::January / 1 / 2019} + 10h + 0min,
-                date::sys_days{date::December / 31 / 2019} + 18h + 0min,
-                timeframe::daily);
-    data_feed_result r_minutes15 =
-        m.fetch("PETR4", date::sys_days{date::January / 1 / 2019} + 10h + 0min,
-                date::sys_days{date::December / 31 / 2019} + 18h + 0min,
-                timeframe::minutes_15);
-    data_feed_result r_weekly =
-        m.fetch("PETR4", date::sys_days{date::January / 1 / 2019} + 10h + 0min,
-                date::sys_days{date::December / 31 / 2019} + 18h + 0min,
-                timeframe::weekly);
+    data_feed_result r_daily = m.fetch(
+        "PETR4", date::sys_days{2019_y / 1 / 1} + 10h + 0min,
+        date::sys_days{2019_y / 12 / 31} + 18h + 0min, timeframe::daily);
+    data_feed_result r_minutes15 = m.fetch(
+        "PETR4", date::sys_days{2019_y / 1 / 1} + 10h + 0min,
+        date::sys_days{2019_y / 12 / 31} + 18h + 0min, timeframe::minutes_15);
+    data_feed_result r_weekly = m.fetch(
+        "PETR4", date::sys_days{2019_y / 1 / 1} + 10h + 0min,
+        date::sys_days{2019_y / 12 / 31} + 18h + 0min, timeframe::weekly);
 
-    data_feed_result r_monthly =
-        m.fetch("PETR4", date::sys_days{date::January / 1 / 2019} + 10h + 0min,
-                date::sys_days{date::December / 31 / 2019} + 18h + 0min,
-                timeframe::monthly);
+    data_feed_result r_monthly = m.fetch(
+        "PETR4", date::sys_days{2019_y / 1 / 1} + 10h + 0min,
+        date::sys_days{2019_y / 12 / 31} + 18h + 0min, timeframe::monthly);
 
-    data_feed_result r_hourly =
-        m.fetch("PETR4", date::sys_days{date::January / 1 / 2019} + 10h + 0min,
-                date::sys_days{date::December / 31 / 2019} + 18h + 0min,
-                timeframe::hourly);
+    data_feed_result r_hourly = m.fetch(
+        "PETR4", date::sys_days{2019_y / 1 / 1} + 10h + 0min,
+        date::sys_days{2019_y / 12 / 31} + 18h + 0min, timeframe::hourly);
 
     // if request the price of inexistent data and time returns -1
     REQUIRE(r_daily.price_from(date::sys_days{2019_y / 01 / 01} + 10h + 0min) !=

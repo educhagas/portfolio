@@ -27,6 +27,7 @@ namespace portfolio {
         closest_price(std::chrono::time_point<std::chrono::system_clock,
                                               std::chrono::minutes>
                           date_time) const;
+        bool historical_data_is_empty();
 
       private:
         std::map<std::chrono::time_point<std::chrono::system_clock,

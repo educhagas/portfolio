@@ -23,7 +23,6 @@ namespace portfolio {
                                       std::chrono::minutes>
                   end_period,
               timeframe tf) override;
-
       private:
         static std::map<std::chrono::time_point<std::chrono::system_clock,
                                                 std::chrono::minutes>,

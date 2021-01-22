@@ -3,7 +3,6 @@
 //
 
 #include "mock_data_feed.h"
-#include <iostream>
 #include <random>
 
 using day_point =
@@ -80,12 +79,9 @@ namespace portfolio {
                     // no negatives prices
                     current_price > 0 ? historical[i] = current_price
                                       : historical[i] = 0;
-                    using namespace date;
-                    std::cout << i << " : " << current_price << std::endl;
                 }
             }
         }
         return historical;
     }
-
 } // namespace portfolio
