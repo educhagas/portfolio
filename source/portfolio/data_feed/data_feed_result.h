@@ -19,10 +19,18 @@ namespace portfolio {
                 historical_data);
       public /* getters and setters */:
         [[maybe_unused]] [[nodiscard]] double lastest_price() const;
-        [[nodiscard]] double
-        price_from(std::chrono::time_point<std::chrono::system_clock,
-                                           std::chrono::minutes>
-                       date_time) const;
+        std::map<std::chrono::time_point<std::chrono::system_clock,
+                                         std::chrono::minutes>,
+                 double>::iterator
+        find_price_from(std::chrono::time_point<std::chrono::system_clock,
+                                                std::chrono::minutes>
+                            date_time);
+
+        std::map<std::chrono::time_point<std::chrono::system_clock,
+                                         std::chrono::minutes>,
+                 double>::iterator
+        get_historical_end();
+
         [[nodiscard]] double
         closest_price(std::chrono::time_point<std::chrono::system_clock,
                                               std::chrono::minutes>

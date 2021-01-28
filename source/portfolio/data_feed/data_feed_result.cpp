@@ -17,17 +17,16 @@ namespace portfolio {
                  double>
             historical_data)
         : historical_data_(std::move(historical_data)) {}
-    double data_feed_result::price_from(
+
+    std::map<std::chrono::time_point<std::chrono::system_clock,
+                                     std::chrono::minutes>,
+             double>::iterator
+    data_feed_result::find_price_from(
         std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>
-            date_time) const {
-        auto it = historical_data_.find(date_time);
-        const bool date_time_is_found = it != historical_data_.end();
-        if (date_time_is_found) {
-            return it->second;
-        } else {
-            return -1;
-        }
+            date_time) {
+        return historical_data_.find(date_time);
     }
+
     double data_feed_result::closest_price(
         std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>
             date_time) const {
@@ -55,5 +54,11 @@ namespace portfolio {
     }
     bool data_feed_result::historical_data_is_empty() {
         return historical_data_.empty();
+    }
+    std::map<std::chrono::time_point<std::chrono::system_clock,
+                                     std::chrono::minutes>,
+             double>::iterator
+    data_feed_result::get_historical_end() {
+        return historical_data_.end();
     }
 } // namespace portfolio

@@ -47,47 +47,52 @@ TEST_CASE("Data Feed") {
         "PETR4", date::sys_days{2019_y / 1 / 1} + 10h + 0min,
         date::sys_days{2019_y / 12 / 31} + 18h + 0min, timeframe::hourly);
 
-    // if request the price of inexistent data and time returns -1
-    REQUIRE(r_daily.price_from(date::sys_days{2019_y / 01 / 01} + 10h + 0min) !=
-            -1);
-    REQUIRE(r_daily.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                               01min) == -1);
-    REQUIRE(r_daily.price_from(date::sys_days{2018_y / 12 / 31} + 10h + 0min) ==
-            -1);
-    REQUIRE(r_daily.price_from(date::sys_days{2020_y / 01 / 01} + 10h + 0min) ==
-            -1);
-    REQUIRE(r_minutes15.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                   0min) != -1);
-    REQUIRE(r_minutes15.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                   01min) == -1);
-    REQUIRE(r_minutes15.price_from(date::sys_days{2018_y / 12 / 31} + 10h +
-                                   0min) == -1);
-    REQUIRE(r_minutes15.price_from(date::sys_days{2020_y / 01 / 01} + 10h +
-                                   0min) == -1);
-    REQUIRE(r_weekly.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                0min) != -1);
-    REQUIRE(r_weekly.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                01min) == -1);
-    REQUIRE(r_weekly.price_from(date::sys_days{2018_y / 12 / 31} + 10h +
-                                0min) == -1);
-    REQUIRE(r_weekly.price_from(date::sys_days{2020_y / 01 / 01} + 10h +
-                                0min) == -1);
-    REQUIRE(r_monthly.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                 0min) != -1);
-    REQUIRE(r_monthly.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                 01min) == -1);
-    REQUIRE(r_monthly.price_from(date::sys_days{2018_y / 12 / 31} + 10h +
-                                 0min) == -1);
-    REQUIRE(r_monthly.price_from(date::sys_days{2020_y / 01 / 01} + 10h +
-                                 0min) == -1);
-    REQUIRE(r_hourly.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                0min) != -1);
-    REQUIRE(r_hourly.price_from(date::sys_days{2019_y / 01 / 01} + 10h +
-                                01min) == -1);
-    REQUIRE(r_hourly.price_from(date::sys_days{2018_y / 12 / 31} + 10h +
-                                0min) == -1);
-    REQUIRE(r_hourly.price_from(date::sys_days{2020_y / 01 / 01} + 10h +
-                                0min) == -1);
+    // if request the price of inexistent data and time returns
+    // historical_data.end()
+    REQUIRE(r_daily.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                    0min) != r_daily.get_historical_end());
+    REQUIRE(r_daily.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                    01min) == r_daily.get_historical_end());
+    REQUIRE(r_daily.find_price_from(date::sys_days{2018_y / 12 / 31} + 10h +
+                                    0min) == r_daily.get_historical_end());
+    REQUIRE(r_daily.find_price_from(date::sys_days{2020_y / 01 / 01} + 10h +
+                                    0min) == r_daily.get_historical_end());
+    REQUIRE(r_minutes15.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                        0min) !=
+            r_minutes15.get_historical_end());
+    REQUIRE(r_minutes15.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                        01min) ==
+            r_minutes15.get_historical_end());
+    REQUIRE(r_minutes15.find_price_from(date::sys_days{2018_y / 12 / 31} + 10h +
+                                        0min) ==
+            r_minutes15.get_historical_end());
+    REQUIRE(r_minutes15.find_price_from(date::sys_days{2020_y / 01 / 01} + 10h +
+                                        0min) ==
+            r_minutes15.get_historical_end());
+    REQUIRE(r_weekly.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                     0min) != r_weekly.get_historical_end());
+    REQUIRE(r_weekly.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                     01min) == r_weekly.get_historical_end());
+    REQUIRE(r_weekly.find_price_from(date::sys_days{2018_y / 12 / 31} + 10h +
+                                     0min) == r_weekly.get_historical_end());
+    REQUIRE(r_weekly.find_price_from(date::sys_days{2020_y / 01 / 01} + 10h +
+                                     0min) == r_weekly.get_historical_end());
+    REQUIRE(r_monthly.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                      0min) != r_monthly.get_historical_end());
+    REQUIRE(r_monthly.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                      01min) == r_monthly.get_historical_end());
+    REQUIRE(r_monthly.find_price_from(date::sys_days{2018_y / 12 / 31} + 10h +
+                                      0min) == r_monthly.get_historical_end());
+    REQUIRE(r_monthly.find_price_from(date::sys_days{2020_y / 01 / 01} + 10h +
+                                      0min) == r_monthly.get_historical_end());
+    REQUIRE(r_hourly.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                     0min) != r_hourly.get_historical_end());
+    REQUIRE(r_hourly.find_price_from(date::sys_days{2019_y / 01 / 01} + 10h +
+                                     01min) == r_hourly.get_historical_end());
+    REQUIRE(r_hourly.find_price_from(date::sys_days{2018_y / 12 / 31} + 10h +
+                                     0min) == r_hourly.get_historical_end());
+    REQUIRE(r_hourly.find_price_from(date::sys_days{2020_y / 01 / 01} + 10h +
+                                     0min) == r_hourly.get_historical_end());
 
     // If request the closest price of a date before the oldest date returns the
     // price of the oldest period.
@@ -161,13 +166,18 @@ TEST_CASE("Data Feed") {
     // if requesting the most recent price returns the most recent price in
     // historical
     REQUIRE(r_daily.lastest_price() ==
-            r_daily.price_from(date::sys_days{2019_y / 12 / 31} + 10h));
+            r_daily.find_price_from(date::sys_days{2019_y / 12 / 31} + 10h)
+                ->second);
     REQUIRE(r_minutes15.lastest_price() ==
-            r_minutes15.price_from(date::sys_days{2019_y / 12 / 31} + 18h));
+            r_minutes15.find_price_from(date::sys_days{2019_y / 12 / 31} + 18h)
+                ->second);
     REQUIRE(r_weekly.lastest_price() ==
-            r_weekly.price_from(date::sys_days{2019_y / 12 / 31} + 10h));
+            r_weekly.find_price_from(date::sys_days{2019_y / 12 / 31} + 10h)
+                ->second);
     REQUIRE(r_monthly.lastest_price() ==
-            r_monthly.price_from(date::sys_days{2019_y / 11 / 07} + 10h));
+            r_monthly.find_price_from(date::sys_days{2019_y / 11 / 07} + 10h)
+                ->second);
     REQUIRE(r_hourly.lastest_price() ==
-            r_hourly.price_from(date::sys_days{2019_y / 12 / 31} + 18h));
+            r_hourly.find_price_from(date::sys_days{2019_y / 12 / 31} + 18h)
+                ->second);
 }
