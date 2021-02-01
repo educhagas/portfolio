@@ -44,7 +44,6 @@ jobs:
       - name: Update GCC
         if: matrix.config.os == 'ubuntu-20.04'
         run: |
-          sudo apt-get update
           sudo apt-get install -y g++-11 g++-11-multilib
           name=CC::gcc-11
           name=CXX::g++-11
