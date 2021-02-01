@@ -9,6 +9,13 @@ CPMAddPackage(NAME range-v3 URL https://github.com/ericniebler/range-v3/archive/
 add_library(range-v3 INTERFACE IMPORTED)
 target_include_directories(range-v3 INTERFACE "${range-v3_SOURCE_DIR}/include")
 
+# Howard Hinnant's date library
+CPMAddPackage(
+        NAME date
+        GITHUB_REPOSITORY HowardHinnant/date
+        VERSION 3.0.0
+)
+
 #######################################################
 ### Library                                         ###
 #######################################################
@@ -24,10 +31,9 @@ add_library(portfolio
         portfolio/portfolio.cpp
         portfolio/portfolio.h
 )
-
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(portfolio PUBLIC Threads::Threads range-v3)
+target_link_libraries(portfolio PUBLIC Threads::Threads range-v3 date::date)
 target_pedantic_options(portfolio)
 target_exception_options(portfolio)

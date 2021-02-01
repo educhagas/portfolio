@@ -44,6 +44,7 @@ jobs:
       - name: Update GCC
         if: matrix.config.os == 'ubuntu-20.04'
         run: |
+          sudo apt-get update
           sudo apt-get install -y g++-10 g++-10-multilib
           name=CC::gcc-10
           name=CXX::g++-10
@@ -62,9 +63,6 @@ jobs:
       - name: Install
         working-directory: ./build
         run: ${{ matrix.config.sudocmd }} cmake --install .
-      - name: Create packages
-        working-directory: ./build
-        run: ${{ matrix.config.sudocmd }} cpack
       - name: Archive Installer Packages
         uses: actions/upload-artifact@v2
         with:
