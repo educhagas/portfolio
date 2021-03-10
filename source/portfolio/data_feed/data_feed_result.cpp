@@ -6,59 +6,40 @@
 #include <chrono>
 #include <utility>
 namespace portfolio {
-    double data_feed_result::lastest_price() const {
+
+    data_feed_result::data_feed_result(price_map historical_data)
+        : historical_data_(std::move(historical_data)) {}
+
+    price_iterator data_feed_result::end() { return historical_data_.end(); }
+
+    bool data_feed_result::empty() { return historical_data_.empty(); }
+
+    [[maybe_unused]] ohlc_prices data_feed_result::lastest_prices2() const {
         // return last price in historical data
         return historical_data_.rbegin()->second;
     }
 
-    data_feed_result::data_feed_result(
-        std::map<std::chrono::time_point<std::chrono::system_clock,
-                                         std::chrono::minutes>,
-                 double>
-            historical_data)
-        : historical_data_(std::move(historical_data)) {}
-
-    std::map<std::chrono::time_point<std::chrono::system_clock,
-                                     std::chrono::minutes>,
-             double>::iterator
-    data_feed_result::find_price_from(
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>
-            date_time) {
-        return historical_data_.find(date_time);
+    price_iterator
+    data_feed_result::find_prices_from(interval_points interval) {
+        return historical_data_.find(interval);
     }
 
-    double data_feed_result::closest_price(
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::minutes>
-            date_time) const {
-        auto it = historical_data_.find(date_time);
-        const bool date_time_is_found = it != historical_data_.end();
-        if (date_time_is_found) {
+    ohlc_prices data_feed_result::closest_prices(minute_point date_time) const {
+        if (date_time <= historical_data_.begin()->first.first) {
+            return historical_data_.begin()->second;
+        } else if (date_time >= historical_data_.rbegin()->first.second) {
+            return historical_data_.rbegin()->second;
+        }
+        auto it = historical_data_.begin();
+        auto previous_it = it;
+        while (date_time > it->first.second) {
+            previous_it = it;
+            it++;
+        }
+        if (date_time >= it->first.first && date_time <= it->first.second) {
             return it->second;
         } else {
-            it = historical_data_.lower_bound(date_time);
-            if (it == historical_data_.begin()) {
-                // if date is lower than oldest date in historical
-                // returns the oldest price in historical
-                return historical_data_.cbegin()->second;
-            } else if (it == historical_data_.end()) {
-                // if the date is higher than the newest date in historical
-                // returns the newest price in historical
-                return historical_data_.rbegin()->second;
-            } else {
-                // if the date is weekend day
-                // returns the price of the previous day in historical
-                it--;
-                return it->second;
-            }
+            return previous_it->second;
         }
-    }
-    bool data_feed_result::historical_data_is_empty() {
-        return historical_data_.empty();
-    }
-    std::map<std::chrono::time_point<std::chrono::system_clock,
-                                     std::chrono::minutes>,
-             double>::iterator
-    data_feed_result::get_historical_end() {
-        return historical_data_.end();
     }
 } // namespace portfolio
