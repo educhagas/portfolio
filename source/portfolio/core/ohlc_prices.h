@@ -4,6 +4,8 @@
 
 #ifndef PORTFOLIO_OHLC_PRICES_H
 #define PORTFOLIO_OHLC_PRICES_H
+#include <string>
+#include <tuple>
 namespace portfolio {
     class ohlc_prices {
       public:
