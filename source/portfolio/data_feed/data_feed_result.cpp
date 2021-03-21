@@ -14,7 +14,7 @@ namespace portfolio {
 
     bool data_feed_result::empty() { return historical_data_.empty(); }
 
-    [[maybe_unused]] ohlc_prices data_feed_result::lastest_prices2() const {
+    ohlc_prices data_feed_result::latest_prices() const {
         // return last price in historical data
         return historical_data_.rbegin()->second;
     }

@@ -17,9 +17,9 @@ namespace portfolio {
                                minute_point end_period, timeframe tf) override;
 
       private:
-        static price_map generate_historical_data2(minute_point start_period,
-                                                   minute_point end_period,
-                                                   timeframe tf);
+        static price_map generate_historical_data(minute_point start_period,
+                                                  minute_point end_period,
+                                                  timeframe tf);
         static price_map generate_historical_data_daily_intraday(
             minute_point start_period, minute_point end_period, timeframe tf);
         static price_map
@@ -28,9 +28,8 @@ namespace portfolio {
         static price_map
         genetate_historical_data_monthly(minute_point start_period,
                                          minute_point end_period);
-        static std::chrono::minutes calculate_increment(timeframe tf);
+        static std::chrono::minutes increment_by(timeframe tf);
     };
-}
+} // namespace portfolio
 
-
-#endif //PORTFOLIO_MOCK_DATA_FEED_H
+#endif // PORTFOLIO_MOCK_DATA_FEED_H

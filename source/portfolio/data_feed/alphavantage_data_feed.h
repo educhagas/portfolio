@@ -22,29 +22,11 @@ namespace portfolio {
 
       private:
         std::string_view api_key;
-        std::string get_url(std::string_view asset_code, timeframe tf);
+        std::string generate_url(std::string_view asset_code, timeframe tf);
 
-        static std::string minute_point_to_string(minute_point mp);
-
-        static std::string interval_points_to_string(interval_points interval);
-        static interval_points
-        string_to_interval_points(std::string str_interval);
-
-        static std::string ohlc_prices_to_string(ohlc_prices &ohcl);
-        static ohlc_prices string_to_ohlc_prices(std::string &str_ohlc);
-
-        static std::string set_filename(std::string_view asset_code,
-                                        std::string_view start_period,
-                                        std::string_view end_period,
-                                        timeframe tf);
-        static std::string get_start_filename(std::string_view asset_code,
-                                              timeframe tf);
-        static minute_point string_to_minute_point(std::string &str_mp);
-
-        price_map get_data_from_alphavantage(std::string_view asset_code,
-                                             minute_point start_period,
-                                             minute_point end_period,
-                                             timeframe tf);
+        price_map request_online_data(std::string_view asset_code,
+                                      minute_point start_period,
+                                      minute_point end_period, timeframe tf);
 
         static void
         set_monthly_data(price_map &hist,

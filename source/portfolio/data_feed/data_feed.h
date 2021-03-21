@@ -5,18 +5,15 @@
 #ifndef PORTFOLIO_DATA_FEED_H
 #define PORTFOLIO_DATA_FEED_H
 
+#include "portfolio/core/ohlc_prices.h"
+#include "portfolio/data_feed/data_feed_result.h"
 #include <chrono>
 #include <date/date.h>
-#include <portfolio/data_feed/data_feed_result.h>
 #include <string_view>
-
 namespace portfolio {
-    using day_point =
-        std::chrono::time_point<std::chrono::system_clock, date::days>;
     using minute_point = std::chrono::time_point<std::chrono::system_clock,
                                                  std::chrono::minutes>;
     using interval_points = std::pair<minute_point, minute_point>;
-    using ohlc_prices = std::tuple<double, double, double, double>;
     using price_map = std::map<interval_points, ohlc_prices>;
     using price_iterator = price_map::iterator;
     enum class timeframe { daily, weekly, monthly, hourly, minutes_15 };
