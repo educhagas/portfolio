@@ -19,6 +19,12 @@ namespace portfolio {
     enum class timeframe { daily, weekly, monthly, hourly, minutes_15 };
     class data_feed {
       public:
+        /// \brief Get data and save in data_feed_result.
+        /// \param asset_code Symbol of asset.
+        /// \param start_period Initial minute_point.
+        /// \param end_period Final minute_point.
+        /// \param tf Timeframe used on request.
+        /// \return Data_feed_result "filled" according to the input parameters.
         virtual data_feed_result fetch(std::string_view asset_code,
                                        minute_point start_period,
                                        minute_point end_period,

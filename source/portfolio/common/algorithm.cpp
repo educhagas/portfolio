@@ -3,7 +3,6 @@
 //
 
 #include "algorithm.h"
-#include <date/date.h>
 #include <iomanip>
 #include <stdexcept>
 #include <vector>

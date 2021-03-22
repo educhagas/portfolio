@@ -18,31 +18,31 @@ namespace portfolio {
     class data_feed_result {
       public /* constructors */:
 
-        /// Class constructor
-        /// \param historical_data Asset data to be stored
+        /// \brief Class constructor
+        /// \param historical_data Asset data to be stored.
         explicit data_feed_result(price_map historical_data);
 
       public /* getters and setters */:
-        /// Get latest prices stored
-        /// \return Latest ohlc_prices stored
+        /// \brief Get latest prices stored.
+        /// \return Latest ohlc_prices stored.
         [[nodiscard]] ohlc_prices latest_prices() const;
 
-        /// Find ohlc_prices of a specific interval point
-        /// \param interval Interval point for searching
+        /// \brief Find ohlc_prices of a specific interval point.
+        /// \param interval Interval point for searching.
         /// \return A iterator for price of interval or returns end() if not
-        /// founded
+        /// founded.
         price_iterator find_prices_from(interval_points interval);
 
-        /// Get a iterator for end of price_map
-        /// \return A iterator for end of price_map
+        /// \brief Get a iterator for end of price_map.
+        /// \return A iterator for end of price_map.
         price_iterator end();
 
-        /// Find ohlc_prices of a closest minute_point
-        /// \param date_time Minute point for searching
-        /// \return A iterator for closest price of date_time
+        /// \brief Find ohlc_prices of a closest minute_point.
+        /// \param date_time Minute point for searching.
+        /// \return A iterator for closest price of date_time.
         [[nodiscard]] ohlc_prices closest_prices(minute_point date_time) const;
 
-        /// Check if data feed result is empty
+        /// \brief Check if data feed result is empty.
         /// \return If the data feed result is empty returns true or false
         /// otherwise.
         bool empty();

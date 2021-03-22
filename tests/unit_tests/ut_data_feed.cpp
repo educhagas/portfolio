@@ -314,16 +314,33 @@ TEST_CASE("Data Feed") {
                 r_hourly.find_prices_from(interval)->second);
     }
 }
-// TEST_CASE("Alphavantage") {
-//    using namespace portfolio;
-//    using namespace date::literals;
-//    using namespace std::chrono_literals;
-//    std::string_view api_key("Enter your API
-//    Key");//https://www.alphavantage.co/ alphavantage_data_feed a(api_key);
-//
-//    minute_point mp_start = date::sys_days{2019_y / 01 / 01} + 10h + 0min;
-//    minute_point mp_end = date::sys_days{2019_y / 12 / 31} + 18h + 0min;
-//
-//    data_feed_result r_daily =
-//        a.fetch("AZUL4", mp_start, mp_end, timeframe::daily);
-//}
+TEST_CASE("Alphavantage") {
+    using namespace portfolio;
+    using namespace date::literals;
+    using namespace std::chrono_literals;
+    // To test other assets and timeframes, use a valid API key.
+    // https://www.alphavantage.co/
+    std::string_view api_key("demo");
+    alphavantage_data_feed a(api_key);
+
+    minute_point mp_start = date::sys_days{2019_y / 01 / 01} + 10h + 0min;
+    minute_point mp_end = date::sys_days{2019_y / 12 / 31} + 18h + 0min;
+
+    // get data from web and save file
+    data_feed_result r_weekly =
+        a.fetch("IBM", mp_start, mp_end, timeframe::weekly);
+    REQUIRE(r_weekly.empty() == false);
+
+    data_feed_result r_monthly =
+        a.fetch("IBM", mp_start, mp_end, timeframe::monthly);
+    REQUIRE(r_monthly.empty() == false);
+
+    // get second time - data from saved data file
+    data_feed_result r_weekly2 =
+        a.fetch("IBM", mp_start, mp_end, timeframe::weekly);
+    REQUIRE(r_weekly2.empty() == false);
+
+    data_feed_result r_monthly2 =
+        a.fetch("IBM", mp_start, mp_end, timeframe::monthly);
+    REQUIRE(r_monthly2.empty() == false);
+}

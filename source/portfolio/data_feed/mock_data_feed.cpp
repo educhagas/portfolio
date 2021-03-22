@@ -37,21 +37,19 @@ namespace portfolio {
         price_map historical_data;
         switch (tf) {
         case (timeframe::monthly):
-            historical_data =
-                genetate_historical_data_monthly(start_period, end_period);
+            historical_data = monthly(start_period, end_period);
             break;
         case (timeframe::weekly):
-            historical_data =
-                generate_historical_data_weekly(start_period, end_period);
+            historical_data = weekly(start_period, end_period);
             break;
         default:
-            historical_data = generate_historical_data_daily_intraday(
-                start_period, end_period, tf);
+            historical_data = daily_intraday(start_period, end_period, tf);
         }
         return historical_data;
     }
-    price_map mock_data_feed::generate_historical_data_daily_intraday(
-        minute_point start_period, minute_point end_period, timeframe tf) {
+    price_map mock_data_feed::daily_intraday(minute_point start_period,
+                                             minute_point end_period,
+                                             timeframe tf) {
         std::chrono::minutes increment = increment_by(tf);
         price_map historical_data;
         static std::random_device r;
@@ -106,9 +104,8 @@ namespace portfolio {
         }
         return historical_data;
     }
-    price_map
-    mock_data_feed::generate_historical_data_weekly(minute_point start_period,
-                                                    minute_point end_period) {
+    price_map mock_data_feed::weekly(minute_point start_period,
+                                     minute_point end_period) {
         price_map historical_data;
         using namespace std::chrono_literals;
         date::sys_days dp_start = date::floor<date::days>(start_period);
@@ -153,9 +150,8 @@ namespace portfolio {
         }
         return historical_data;
     }
-    price_map
-    mock_data_feed::genetate_historical_data_monthly(minute_point start_period,
-                                                     minute_point end_period) {
+    price_map mock_data_feed::monthly(minute_point start_period,
+                                      minute_point end_period) {
         price_map historical_data;
         date::year_month_day date_start = date::floor<date::days>(start_period);
         date::year_month_day date_end = date::floor<date::days>(end_period);

@@ -34,20 +34,20 @@ namespace portfolio {
         case timeframe::minutes_15:
             return "15min";
         case timeframe::daily:
-            url += "TIME_SERIES_DAILY";
+            url += "TIME_SERIES_DAILY_ADJUSTED&outputsize=full";
             break;
         case timeframe::hourly:
             return "60min";
         case timeframe::monthly:
-            url += "TIME_SERIES_MONTHLY";
+            url += "TIME_SERIES_MONTHLY_ADJUSTED";
             break;
         case timeframe::weekly:
-            url += "TIME_SERIES_WEEKLY";
+            url += "TIME_SERIES_WEEKLY_ADJUSTED";
             break;
         }
         url += "&symbol=";
         url += asset_code;
-        url += ".SAO&outputsize=full&apikey=";
+        url += "&apikey=";
         url += api_key;
         return url;
     }
@@ -79,8 +79,16 @@ namespace portfolio {
             std::vector<std::string> results(
                 std::istream_iterator<std::string>{iss},
                 std::istream_iterator<std::string>());
-            minute_point file_start_point = string_to_minute_point(results[2]);
-            minute_point file_end_point = string_to_minute_point(results[3]);
+            minute_point file_start_point;
+            minute_point file_end_point;
+            if (results.size() == 5) {
+                file_start_point = string_to_minute_point(results[2]);
+                file_end_point = string_to_minute_point(results[3]);
+            } else {
+                file_start_point = string_to_minute_point(results[3]);
+                file_end_point = string_to_minute_point(results[4]);
+            }
+
             if (file_start_point <= start_period &&
                 file_end_point >= end_period) {
                 need_online_search = false;
@@ -131,7 +139,7 @@ namespace portfolio {
             throw std::runtime_error("Cannot request data: " + url);
         }
         nlohmann::json j_from_alphavantage = nlohmann::json::parse(r.text);
-        if (j_from_alphavantage.contains("Error Message")) {
+        if (!j_from_alphavantage.contains("Meta Data")) {
             throw std::runtime_error(
                 "Request return error message: " +
                 j_from_alphavantage.begin().value().get<std::string>() +
@@ -238,7 +246,8 @@ namespace portfolio {
         using namespace std::chrono_literals;
         interval_points interval;
         ohlc_prices ohlc;
-        for (auto &[key, value] : j_data["Weekly Time Series"].items()) {
+        for (auto &[key, value] :
+             j_data["Weekly Adjusted Time Series"].items()) {
             std::string text = key;
             std::replace(text.begin(), text.end(), '-', ' ');
             std::istringstream iss(text);
@@ -310,7 +319,8 @@ namespace portfolio {
         using namespace std::chrono_literals;
         interval_points interval;
         ohlc_prices ohlc;
-        for (auto &[key, value] : j_data["Monthly Time Series"].items()) {
+        for (auto &[key, value] :
+             j_data["Monthly Adjusted Time Series"].items()) {
             std::string text = key;
             std::replace(text.begin(), text.end(), '-', ' ');
             std::istringstream iss(text);
