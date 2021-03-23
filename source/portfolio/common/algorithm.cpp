@@ -1,21 +1,24 @@
 //
-// Created by eduar on 15/03/2021.
+// Created by eduardo on 15/03/2021.
 //
 
 #include "algorithm.h"
 #include <iomanip>
+#include <regex>
 #include <stdexcept>
 #include <vector>
 
 namespace portfolio {
 
-    double string_to_double(const std::string &str) {
-        try {
+    double string_to_double(std::string_view str) {
+        std::string s(str);
+        std::regex e(R"([+-]{0,1}[0-9]+(\.[0-9]+)?)");
+        if (std::regex_match(s, e)) {
             std::string::size_type sz; // alias of size_t
-            return std::stod(str, &sz);
-        } catch (std::invalid_argument &e) {
-            throw std::runtime_error("Fatal conversion error: " +
-                                     std::string(e.what()));
+            return std::stod(s, &sz);
+        } else {
+            throw std::runtime_error("Value: " + s +
+                                     " cannot be converted to double.");
         }
     }
 
@@ -29,9 +32,10 @@ namespace portfolio {
         return str_start + "|" + str_end;
     }
 
-    minute_point string_to_minute_point(std::string &str_mp) {
+    minute_point string_to_minute_point(std::string_view str_mp) {
+        std::string str(str_mp);
         std::tm tm = {};
-        std::stringstream ss(str_mp);
+        std::stringstream ss(str);
         ss >> std::get_time(&tm, "%Y-%m-%d_%H-%M");
         std::chrono::system_clock::time_point tp =
             std::chrono::system_clock::from_time_t(mktime(&tm));
@@ -39,9 +43,10 @@ namespace portfolio {
         return std::chrono::floor<std::chrono::minutes>(tp);
     }
 
-    interval_points string_to_interval_points(std::string str_interval) {
-        std::replace(str_interval.begin(), str_interval.end(), '|', ' ');
-        std::istringstream iss(str_interval);
+    interval_points string_to_interval_points(std::string_view str_interval) {
+        std::string str(str_interval);
+        std::replace(str.begin(), str.end(), '|', ' ');
+        std::istringstream iss(str);
         std::vector<std::string> result(std::istream_iterator<std::string>{iss},
                                         std::istream_iterator<std::string>());
         minute_point start = string_to_minute_point(result[0]);

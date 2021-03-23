@@ -1,5 +1,5 @@
 //
-// Created by eduar on 15/03/2021.
+// Created by eduardo on 15/03/2021.
 //
 
 #ifndef PORTFOLIO_ALGORITHM_H
@@ -16,13 +16,13 @@ namespace portfolio {
     /// \brief Conversion from std::string to double making exception treatment.
     /// \param str std::string to be converted.
     /// \return double converted from std::string.
-    double string_to_double(const std::string &str);
+    double string_to_double(std::string_view str);
 
     /// \brief Conversion from std::string to minute_point.
     /// \param str_mp std::string to be converted. To work correctly, a string
     /// in the format "%Y-%m-%d_%H-%M" must be used. \return minute_point
     /// converted from str_mp.
-    minute_point string_to_minute_point(std::string &str_mp);
+    minute_point string_to_minute_point(std::string_view str_mp);
 
     /// \brief Conversion from minute_point to std::string.
     /// \param mp minute_point to be converted.
@@ -40,7 +40,7 @@ namespace portfolio {
     /// \param str_interval std::string to be converted. To work correctly, a
     /// string in the format "%Y-%m-%d_%H-%M|%Y-%m-%d_%H-%M" must be used.
     /// \return interval_points converted from str_interval.
-    interval_points string_to_interval_points(std::string str_interval);
+    interval_points string_to_interval_points(std::string_view str_interval);
 
     /// \brief Defines a name for local data file.
     /// \param asset_code Symbol of asset.

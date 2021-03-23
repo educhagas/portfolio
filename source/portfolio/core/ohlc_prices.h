@@ -1,19 +1,14 @@
 //
-// Created by eduar on 15/03/2021.
+// Created by eduardo on 15/03/2021.
 //
 
 #ifndef PORTFOLIO_OHLC_PRICES_H
 #define PORTFOLIO_OHLC_PRICES_H
 #include <string>
-#include <tuple>
 namespace portfolio {
     class ohlc_prices {
       public:
         ohlc_prices();
-        /// \brief Class constructor.
-        /// \param data std::tuple<double,double,double,double> for open, high,
-        /// low and close prices.
-        explicit ohlc_prices(std::tuple<double, double, double, double> data);
 
         /// \brief Class constructor.
         /// \param open Open price.
@@ -27,19 +22,19 @@ namespace portfolio {
 
         /// \brief Get open price.
         /// \return Double - open price.
-        double open();
+        [[nodiscard]] double open() const;
 
         /// \brief Get high price.
         /// \return Double - high price.
-        double high();
+        [[nodiscard]] double high() const;
 
         /// \brief Get low price.
         /// \return Double - low price.
-        double low();
+        [[nodiscard]] double low() const;
 
         /// \brief Get close price.
         /// \return Double - close price.
-        double close();
+        [[nodiscard]] double close() const;
 
         /// \brief Set OHLC prices.
         /// \param open Open price.
@@ -51,7 +46,7 @@ namespace portfolio {
         /// \brief Convert OHLC to string.
         /// \return OHLC prices converted to std::string. Output string in
         /// "double double double double" format(Space-separated values).
-        std::string to_string();
+        [[nodiscard]] std::string to_string() const;
 
         /// \brief Set values from OHLC from std::string.
         /// \param str_ohlc Values of OHLC prices. To work correctly, a string
@@ -59,7 +54,10 @@ namespace portfolio {
         void from_string(const std::string &str_ohlc);
 
       private:
-        std::tuple<double, double, double, double> data_;
+        double open_price_;
+        double high_price_;
+        double low_price_;
+        double close_price_;
     };
 } // namespace portfolio
 #endif // PORTFOLIO_OHLC_PRICES_H
