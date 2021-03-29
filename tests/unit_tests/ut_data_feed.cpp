@@ -2,6 +2,7 @@
 
 #include <catch2/catch.hpp>
 #include <chrono>
+#include <portfolio/common/algorithm.h>
 #include <portfolio/data_feed/alphavantage_data_feed.h>
 #include <portfolio/data_feed/mock_data_feed.h>
 TEST_CASE("Mock Data Feed") {
@@ -314,6 +315,41 @@ TEST_CASE("Data Feed") {
                 r_hourly.find_prices_from(interval)->second);
     }
 }
+TEST_CASE("Is_floating") {
+    std::string_view valid1("2");
+    std::string_view valid2("+2");
+    std::string_view valid3("-2");
+    std::string_view valid4("2278");
+    std::string_view valid5("-2278");
+    std::string_view valid6("227.909");
+    std::string_view valid7("+227.909");
+    std::string_view valid8("-227.909");
+
+    std::string_view invalid1("a");
+    std::string_view invalid2("-.9");
+    std::string_view invalid3("2a.9");
+    std::string_view invalid4("2.9.9");
+    std::string_view invalid5("-2.9.9");
+    std::string_view invalid6("299.");
+    SECTION("VALID_CASES") {
+        REQUIRE(portfolio::is_floating(valid1));
+        REQUIRE(portfolio::is_floating(valid2));
+        REQUIRE(portfolio::is_floating(valid3));
+        REQUIRE(portfolio::is_floating(valid4));
+        REQUIRE(portfolio::is_floating(valid5));
+        REQUIRE(portfolio::is_floating(valid6));
+        REQUIRE(portfolio::is_floating(valid7));
+        REQUIRE(portfolio::is_floating(valid8));
+    }
+    SECTION("INVALID_CASES") {
+        REQUIRE_FALSE(portfolio::is_floating(invalid1));
+        REQUIRE_FALSE(portfolio::is_floating(invalid2));
+        REQUIRE_FALSE(portfolio::is_floating(invalid3));
+        REQUIRE_FALSE(portfolio::is_floating(invalid4));
+        REQUIRE_FALSE(portfolio::is_floating(invalid5));
+        REQUIRE_FALSE(portfolio::is_floating(invalid6));
+    }
+}
 TEST_CASE("Alphavantage") {
     using namespace portfolio;
     using namespace date::literals;
@@ -324,7 +360,7 @@ TEST_CASE("Alphavantage") {
     alphavantage_data_feed a(api_key);
 
     minute_point mp_start = date::sys_days{2019_y / 01 / 01} + 10h + 0min;
-    minute_point mp_end = date::sys_days{2019_y / 12 / 31} + 18h + 0min;
+    minute_point mp_end = date::sys_days{2020_y / 12 / 31} + 18h + 0min;
 
     // get data from web and save file
     data_feed_result r_weekly =

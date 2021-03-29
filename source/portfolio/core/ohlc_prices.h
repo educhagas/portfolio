@@ -51,7 +51,8 @@ namespace portfolio {
         /// \brief Set values from OHLC from std::string.
         /// \param str_ohlc Values of OHLC prices. To work correctly, a string
         /// in the format "double double double double" must be used.
-        void from_string(const std::string &str_ohlc);
+        /// \return True if not occurs errors or false otherwise.
+        bool from_string(std::string_view str_ohlc);
 
       private:
         double open_price_;

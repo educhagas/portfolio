@@ -39,15 +39,39 @@ namespace portfolio {
         std::string close_str = std::to_string(close_price_);
         return open_str + " " + high_str + " " + low_str + " " + close_str;
     }
-    void ohlc_prices::from_string(const std::string &str_ohlc) {
-        std::istringstream iss(str_ohlc);
+    bool ohlc_prices::from_string(std::string_view str_ohlc) {
+        std::string str(str_ohlc);
+        std::istringstream iss(str);
         std::vector<std::string> result(std::istream_iterator<std::string>{iss},
                                         std::istream_iterator<std::string>());
-        double open = string_to_double(result[0]);
-        double high = string_to_double(result[1]);
-        double low = string_to_double(result[2]);
-        double close = string_to_double(result[3]);
-        this->set_prices(open, high, low, close);
+        std::string st_open = result[0];
+        std::string st_high = result[1];
+        std::string st_low = result[2];
+        std::string st_close = result[3];
+
+        std::string::size_type sz; // alias of size_t
+
+        if (is_floating(st_open)) {
+            open_price_ = std::stod(st_open, &sz);
+        } else {
+            return false;
+        }
+        if (is_floating(st_high)) {
+            high_price_ = std::stod(st_high, &sz);
+        } else {
+            return false;
+        }
+        if (is_floating(st_low)) {
+            low_price_ = std::stod(st_low, &sz);
+        } else {
+            return false;
+        }
+        if (is_floating(st_close)) {
+            close_price_ = std::stod(st_close, &sz);
+        } else {
+            return false;
+        }
+        return true;
     }
     bool ohlc_prices::operator==(const ohlc_prices &rhs) const {
         return open_price_ == rhs.open_price_ &&

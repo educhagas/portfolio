@@ -13,10 +13,10 @@ namespace portfolio {
                                                  std::chrono::minutes>;
     using interval_points = std::pair<minute_point, minute_point>;
 
-    /// \brief Conversion from std::string to double making exception treatment.
-    /// \param str std::string to be converted.
-    /// \return double converted from std::string.
-    double string_to_double(std::string_view str);
+    /// \brief Test if string is in floating-point format.
+    /// \param str_view String to be tested
+    /// \return True if is in floating-point format or false otherwise.
+    bool is_floating(std::string_view str_view);
 
     /// \brief Conversion from std::string to minute_point.
     /// \param str_mp std::string to be converted. To work correctly, a string

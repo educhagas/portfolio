@@ -1,5 +1,5 @@
 //
-// Created by eduar on 03/02/2021.
+// Created by eduardo on 03/02/2021.
 //
 
 #include "alphavantage_data_feed.h"
@@ -97,8 +97,12 @@ namespace portfolio {
             }
         }
         if (need_online_search) {
-            return data_feed_result(
-                request_online_data(asset_code, start_period, end_period, tf));
+            price_map hist;
+            if (!request_online_data(hist, asset_code, start_period, end_period,
+                                     tf)) {
+                std::cerr << "Error on data requesting." << std::endl;
+            }
+            return data_feed_result(hist);
         } else {
 
             std::string line;
@@ -108,31 +112,33 @@ namespace portfolio {
                 fin.close();
             }
             nlohmann::json json_from_file = nlohmann::json::parse(line);
-
+            bool has_error = false;
             for (auto &el : json_from_file.items()) {
-                // std::cout << "FROM: " << el.key() << " : " << el.value() <<
-                // "\n";
                 std::string value = el.value();
                 ohlc_prices ohlc;
-                ohlc.from_string(value);
+                has_error = !ohlc.from_string(value);
+                if (has_error) {
+                    std::cerr << "Error on data reading." << std::endl;
+                    break;
+                }
                 price_from_file[string_to_interval_points(el.key())] = ohlc;
             }
 
             price_map historical;
-            for (auto &item : price_from_file) {
-                if (item.first.first >= start_period &&
-                    item.first.second <= end_period) {
-                    historical[item.first] = item.second;
+            if (!has_error) {
+                for (auto &item : price_from_file) {
+                    if (item.first.first >= start_period &&
+                        item.first.second <= end_period) {
+                        historical[item.first] = item.second;
+                    }
                 }
             }
-
             return data_feed_result(historical);
         }
     }
-    price_map alphavantage_data_feed::request_online_data(
-        std::string_view asset_code, minute_point start_period,
-        minute_point end_period, timeframe tf) {
-        price_map historical_data;
+    bool alphavantage_data_feed::request_online_data(
+        price_map &historical_data, std::string_view asset_code,
+        minute_point start_period, minute_point end_period, timeframe tf) {
         std::string url = generate_url(asset_code, tf);
         cpr::Response r = cpr::Get(cpr::Url{url});
         if (r.status_code != 200) {
@@ -148,19 +154,22 @@ namespace portfolio {
         using namespace date::literals;
         using namespace std::chrono_literals;
         std::map<std::string, std::string> to_serialize;
-
+        bool has_error;
         switch (tf) {
         case (timeframe::monthly):
-            set_monthly_data(historical_data, to_serialize, start_period,
-                             end_period, j_from_alphavantage);
+            has_error =
+                !set_monthly_data(historical_data, to_serialize, start_period,
+                                  end_period, j_from_alphavantage);
             break;
         case (timeframe::weekly):
-            set_weekly_data(historical_data, to_serialize, start_period,
-                            end_period, j_from_alphavantage);
+            has_error =
+                !set_weekly_data(historical_data, to_serialize, start_period,
+                                 end_period, j_from_alphavantage);
             break;
         case (timeframe::daily):
-            set_daily_data(historical_data, to_serialize, start_period,
-                           end_period, j_from_alphavantage);
+            has_error =
+                !set_daily_data(historical_data, to_serialize, start_period,
+                                end_period, j_from_alphavantage);
             break;
         default:
             std::string str_tf;
@@ -170,27 +179,32 @@ namespace portfolio {
                 str_tf +
                 " timeframe for B3 data is not supported by Alphavantage");
         }
-        nlohmann::json j_to_serialize(to_serialize);
-        std::string start_interval = to_serialize.begin()->first;
-        std::string end_interval = to_serialize.rbegin()->first;
-        std::replace(start_interval.begin(), start_interval.end(), '|', ' ');
-        std::replace(end_interval.begin(), end_interval.end(), '|', ' ');
-        std::istringstream iss_start(start_interval);
-        std::istringstream iss_end(end_interval);
-        std::vector<std::string> start_result(
-            std::istream_iterator<std::string>{iss_start},
-            std::istream_iterator<std::string>());
-        std::vector<std::string> end_result(
-            std::istream_iterator<std::string>{iss_end},
-            std::istream_iterator<std::string>());
-        std::string fp = "./stock_data/";
-        fp += set_filename(asset_code, start_result[0], end_result[1], tf);
-        std::ofstream fout(fp);
-        fout << j_to_serialize.dump();
-        fout.close();
-        return historical_data;
+        if (has_error) {
+            return false;
+        } else {
+            nlohmann::json j_to_serialize(to_serialize);
+            std::string start_interval = to_serialize.begin()->first;
+            std::string end_interval = to_serialize.rbegin()->first;
+            std::replace(start_interval.begin(), start_interval.end(), '|',
+                         ' ');
+            std::replace(end_interval.begin(), end_interval.end(), '|', ' ');
+            std::istringstream iss_start(start_interval);
+            std::istringstream iss_end(end_interval);
+            std::vector<std::string> start_result(
+                std::istream_iterator<std::string>{iss_start},
+                std::istream_iterator<std::string>());
+            std::vector<std::string> end_result(
+                std::istream_iterator<std::string>{iss_end},
+                std::istream_iterator<std::string>());
+            std::string fp = "./stock_data/";
+            fp += set_filename(asset_code, start_result[0], end_result[1], tf);
+            std::ofstream fout(fp);
+            fout << j_to_serialize.dump();
+            fout.close();
+            return true;
+        }
     }
-    void alphavantage_data_feed::set_daily_data(
+    bool alphavantage_data_feed::set_daily_data(
         price_map &hist, std::map<std::string, std::string> &to_serialize,
         minute_point start_period, minute_point end_period,
         nlohmann::json j_data) {
@@ -219,10 +233,29 @@ namespace portfolio {
                 throw std::runtime_error("Fatal error: " +
                                          std::string(e.what()));
             }
-            double open = string_to_double(st_open);
-            double high = string_to_double(st_high);
-            double low = string_to_double(st_low);
-            double close = string_to_double(st_close);
+            std::string::size_type sz; // alias of size_t
+            double open, high, low, close;
+            if (is_floating(st_open)) {
+                open = std::stod(st_open, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_high)) {
+                high = std::stod(st_high, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_low)) {
+                low = std::stod(st_low, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_close)) {
+                close = std::stod(st_close, &sz);
+            } else {
+                return false;
+            }
+
             interval_points interval;
             ohlc_prices ohlc;
             if (mp >= start_period && mp <= end_period) {
@@ -238,8 +271,9 @@ namespace portfolio {
                     ohlc.to_string();
             }
         }
+        return true;
     }
-    void alphavantage_data_feed::set_weekly_data(
+    bool alphavantage_data_feed::set_weekly_data(
         price_map &hist, std::map<std::string, std::string> &to_serialize,
         minute_point start_period, minute_point end_period,
         nlohmann::json j_data) {
@@ -271,10 +305,29 @@ namespace portfolio {
                 throw std::runtime_error("Fatal error: " +
                                          std::string(e.what()));
             }
-            double open = string_to_double(st_open);
-            double high = string_to_double(st_high);
-            double low = string_to_double(st_low);
-            double close = string_to_double(st_close);
+            std::string::size_type sz; // alias of size_t
+            double open, high, low, close;
+
+            if (is_floating(st_open)) {
+                open = std::stod(st_open, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_high)) {
+                high = std::stod(st_high, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_low)) {
+                low = std::stod(st_low, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_close)) {
+                close = std::stod(st_close, &sz);
+            } else {
+                return false;
+            }
             std::chrono::hours increment_open;
             std::chrono::hours increment_close;
             date::weekday wd{std::chrono::time_point_cast<date::days>(mp)};
@@ -311,8 +364,9 @@ namespace portfolio {
                     ohlc.to_string();
             }
         }
+        return true;
     }
-    void alphavantage_data_feed::set_monthly_data(
+    bool alphavantage_data_feed::set_monthly_data(
         price_map &hist, std::map<std::string, std::string> &to_serialize,
         minute_point start_period, minute_point end_period,
         nlohmann::json j_data) {
@@ -347,10 +401,29 @@ namespace portfolio {
                 throw std::runtime_error("Fatal error: " +
                                          std::string(e.what()));
             }
-            double open = string_to_double(st_open);
-            double high = string_to_double(st_high);
-            double low = string_to_double(st_low);
-            double close = string_to_double(st_close);
+            std::string::size_type sz; // alias of size_t
+            double open, high, low, close;
+
+            if (is_floating(st_open)) {
+                open = std::stod(st_open, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_high)) {
+                high = std::stod(st_high, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_low)) {
+                low = std::stod(st_low, &sz);
+            } else {
+                return false;
+            }
+            if (is_floating(st_close)) {
+                close = std::stod(st_close, &sz);
+            } else {
+                return false;
+            }
             std::chrono::hours increment_open;
             date::weekday wd{
                 std::chrono::time_point_cast<date::days>(mp_start)};
@@ -375,6 +448,7 @@ namespace portfolio {
                     ohlc.to_string();
             }
         }
+        return true;
     }
 
 } // namespace portfolio

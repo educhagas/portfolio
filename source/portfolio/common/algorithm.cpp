@@ -4,23 +4,12 @@
 
 #include "algorithm.h"
 #include <iomanip>
+#include <iostream>
 #include <regex>
 #include <stdexcept>
 #include <vector>
 
 namespace portfolio {
-
-    double string_to_double(std::string_view str) {
-        std::string s(str);
-        std::regex e(R"([+-]{0,1}[0-9]+(\.[0-9]+)?)");
-        if (std::regex_match(s, e)) {
-            std::string::size_type sz; // alias of size_t
-            return std::stod(s, &sz);
-        } else {
-            throw std::runtime_error("Value: " + s +
-                                     " cannot be converted to double.");
-        }
-    }
 
     std::string minute_point_to_string(minute_point mp) {
         return date::format("%Y-%m-%d_%H-%M", mp);
@@ -99,6 +88,55 @@ namespace portfolio {
             start_filename += "MINUTES15";
         }
         return start_filename;
+    }
+    bool is_floating(std::string_view str_view) {
+        std::string str(str_view);
+        int len = str.length();
+        if (len == 0) {
+            return false;
+        } else if (len == 1) {
+            if (std::isdigit(str[0])) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (len == 2) {
+            if ((std::isdigit(str[0]) || str[0] == '-' || str[0] == '+') &&
+                std::isdigit(str[1])) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (!std::isdigit(str[len - 1])) {
+                return false;
+            } else {
+                bool start_with_signal = str[0] == '-' || str[0] == '+';
+                bool start_is_valid = std::isdigit(str[0]) || start_with_signal;
+                if (!start_is_valid) {
+                    return false;
+                } else {
+                    bool has_point = false;
+                    for (int i = 1; i < len - 1; ++i) {
+                        if (i == 1 && start_with_signal &&
+                            !std::isdigit(str[1])) {
+                            return false;
+                        } else {
+                            if (str[i] == '.') {
+                                if (has_point) {
+                                    return false;
+                                } else {
+                                    has_point = true;
+                                }
+                            } else if (!std::isdigit(str[i])) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
     }
 
 } // namespace portfolio
