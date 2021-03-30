@@ -5,44 +5,51 @@
 #ifndef PORTFOLIO_DATA_FEED_RESULT_H
 #define PORTFOLIO_DATA_FEED_RESULT_H
 
+#include "portfolio/core/ohlc_prices.h"
 #include <chrono>
 #include <date/date.h>
 #include <map>
-
 namespace portfolio {
+    using minute_point = std::chrono::time_point<std::chrono::system_clock,
+                                                 std::chrono::minutes>;
+    using interval_points = std::pair<minute_point, minute_point>;
+    using price_map = std::map<interval_points, ohlc_prices>;
+    using price_iterator = price_map::iterator;
     class data_feed_result {
       public /* constructors */:
-        explicit data_feed_result(
-            std::map<std::chrono::time_point<std::chrono::system_clock,
-                                             std::chrono::minutes>,
-                     double>
-                historical_data);
+
+        /// \brief Class constructor
+        /// \param historical_data Asset data to be stored.
+        explicit data_feed_result(price_map historical_data);
+
       public /* getters and setters */:
-        [[maybe_unused]] [[nodiscard]] double lastest_price() const;
-        std::map<std::chrono::time_point<std::chrono::system_clock,
-                                         std::chrono::minutes>,
-                 double>::iterator
-        find_price_from(std::chrono::time_point<std::chrono::system_clock,
-                                                std::chrono::minutes>
-                            date_time);
+        /// \brief Get latest prices stored.
+        /// \return Latest ohlc_prices stored.
+        [[nodiscard]] ohlc_prices latest_prices() const;
 
-        std::map<std::chrono::time_point<std::chrono::system_clock,
-                                         std::chrono::minutes>,
-                 double>::iterator
-        get_historical_end();
+        /// \brief Find ohlc_prices of a specific interval point.
+        /// \param interval Interval point for searching.
+        /// \return A iterator for price of interval or returns end() if not
+        /// founded.
+        price_iterator find_prices_from(interval_points interval);
 
-        [[nodiscard]] double
-        closest_price(std::chrono::time_point<std::chrono::system_clock,
-                                              std::chrono::minutes>
-                          date_time) const;
-        bool historical_data_is_empty();
+        /// \brief Get a iterator for end of price_map.
+        /// \return A iterator for end of price_map.
+        price_iterator end();
+
+        /// \brief Find ohlc_prices of a closest minute_point.
+        /// \param date_time Minute point for searching.
+        /// \return A iterator for closest price of date_time.
+        [[nodiscard]] ohlc_prices closest_prices(minute_point date_time) const;
+
+        /// \brief Check if data feed result is empty.
+        /// \return If the data feed result is empty returns true or false
+        /// otherwise.
+        bool empty();
 
       private:
-        std::map<std::chrono::time_point<std::chrono::system_clock,
-                                         std::chrono::minutes>,
-                 double>
-            historical_data_;
+        price_map historical_data_;
     };
-}
+} // namespace portfolio
 
-#endif //PORTFOLIO_DATA_FEED_RESULT_H
+#endif // PORTFOLIO_DATA_FEED_RESULT_H
