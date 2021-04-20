@@ -7,12 +7,12 @@
 
 #include <string>
 #include <map>
-
 namespace portfolio {
     class portfolio {
-
-    private:
-        std::map<std::string, unsigned> assets_;
+      public:
+        // portfolio();
+      protected:
+        std::map<std::string, double> assets_;
     };
 }
 

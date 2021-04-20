@@ -12,7 +12,7 @@ namespace portfolio {
 
     alphavantage_data_feed::alphavantage_data_feed(
         const std::string_view &apiKey)
-        : api_key(apiKey) {
+        : api_key_(apiKey) {
         std::string path = "./";
         bool data_folder_exists = false;
         for (const auto &entry : std::filesystem::directory_iterator(path)) {
@@ -48,7 +48,7 @@ namespace portfolio {
         url += "&symbol=";
         url += asset_code;
         url += "&apikey=";
-        url += api_key;
+        url += api_key_;
         return url;
     }
 

@@ -42,4 +42,35 @@ namespace portfolio {
             return previous_it->second;
         }
     }
+    price_iterator data_feed_result::begin() {
+        return historical_data_.begin();
+    }
+    bool data_feed_result::operator==(const data_feed_result &rhs) const {
+        return historical_data_ == rhs.historical_data_;
+    }
+    bool data_feed_result::operator!=(const data_feed_result &rhs) const {
+        return !(rhs == *this);
+    }
+    bool data_feed_result::operator<(const data_feed_result &rhs) const {
+        return historical_data_.begin()->first.first <
+               rhs.historical_data_.begin()->first.first;
+    }
+    bool data_feed_result::operator>(const data_feed_result &rhs) const {
+        return rhs < *this;
+    }
+    bool data_feed_result::operator<=(const data_feed_result &rhs) const {
+        return !(rhs < *this);
+    }
+    bool data_feed_result::operator>=(const data_feed_result &rhs) const {
+        return !(*this < rhs);
+    }
+    data_feed_result &data_feed_result::operator=(const data_feed_result &rhs) {
+        if (this == &rhs)
+            return *this;
+        this->historical_data_ = rhs.historical_data_;
+        return *this;
+    }
+    data_feed_result::data_feed_result(const data_feed_result &rhs) {
+        this->historical_data_ = rhs.historical_data_;
+    }
 } // namespace portfolio

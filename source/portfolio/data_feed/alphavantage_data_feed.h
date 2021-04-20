@@ -26,8 +26,6 @@ namespace portfolio {
                                minute_point end_period, timeframe tf) override;
 
       private:
-        std::string_view api_key;
-
         /// Generates url to download data from alphavantage.
         /// \param asset_code Symbol of asset. For B3 assets add ".SAO" after
         /// the code. Example: "PETR4.SAO". \param tf Timeframe used on url.
@@ -87,6 +85,8 @@ namespace portfolio {
                        std::map<std::string, std::string> &to_serialize,
                        minute_point start_period, minute_point end_period,
                        nlohmann::json j_data);
+
+        std::string_view api_key_;
     };
 } // namespace portfolio
 #endif // PORTFOLIO_ALPHAVANTAGE_DATA_FEED_H

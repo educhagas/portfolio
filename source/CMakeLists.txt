@@ -68,7 +68,11 @@ add_library(portfolio
         portfolio/common/algorithm.h
         portfolio/common/algorithm.cpp
         portfolio/core/ohlc_prices.h
-        portfolio/core/ohlc_prices.cpp)
+        portfolio/core/ohlc_prices.cpp
+        portfolio/market_data_mad.cpp
+        portfolio/market_data_mad.h
+        portfolio/portfolio_mad.cpp
+        portfolio/portfolio_mad.h)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
