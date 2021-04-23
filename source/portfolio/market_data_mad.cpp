@@ -1,5 +1,5 @@
 //
-// Created by eduar on 06/04/2021.
+// Created by eduardo on 06/04/2021.
 //
 
 #include "market_data_mad.h"
@@ -8,12 +8,13 @@
 namespace portfolio {
 
     market_data_mad::market_data_mad(const std::vector<std::string> &assetList,
+                                     data_feed &df,
                                      const minute_point &startPeriod,
                                      const minute_point &endPeriod,
-                                     timeframe tf, const int mad_periods)
-        : market_data(assetList, startPeriod, endPeriod, tf) {
-        for (auto &i : asset_list_) {
-            std::vector<double> cp = close_prices(i, mad_periods + 1);
+                                     timeframe tf, int mad_periods)
+        : market_data(assetList, df, startPeriod, endPeriod, tf) {
+        for (auto &i : assets_map_) {
+            std::vector<double> cp = close_prices(i.first, mad_periods + 1);
             std::vector<double> ret;
             for (int j = 1; j < cp.size(); ++j) {
                 ret.push_back((cp[j] - cp[j - 1]) / cp[j - 1]);
@@ -25,15 +26,30 @@ namespace portfolio {
                 ret.begin(), ret.end(),
                 [&mad, mean](const double &d) { mad += std::abs(d - mean); });
             mad /= ret.size();
-            expected_return[i] = mean;
-            risk[i] = mad;
-            assets.push_back(i);
+            expected_return_[i.first] = mean;
+            risk_[i.first] = mad;
+            assets_.push_back(i.first);
         }
     }
-    void market_data_mad::disp() {
-        for (auto &a : asset_list_) {
-            std::cout << "Asset: " << a << " - Risk: " << risk[a]
-                      << " - Return: " << expected_return[a] << std::endl;
+
+    std::ostream &operator<<(std::ostream &os, const market_data_mad &mad) {
+        for (auto &a : mad.assets_) {
+            os << "Asset: " << a << " - Risk: " << mad.risk_.at(a)
+               << " - Return: " << mad.expected_return_.at(a) << "\n";
         }
+        return os;
     }
+    std::vector<std::string>::iterator market_data_mad::assets_begin() {
+        return assets_.begin();
+    }
+    std::vector<std::string>::iterator market_data_mad::assets_end() {
+        return assets_.end();
+    }
+    double market_data_mad::risk_of(const std::string &asset) {
+        return risk_[asset];
+    }
+    double market_data_mad::expected_return_of(const std::string &asset) {
+        return expected_return_[asset];
+    }
+
 } // namespace portfolio

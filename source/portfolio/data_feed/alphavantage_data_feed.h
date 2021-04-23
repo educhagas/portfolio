@@ -27,14 +27,14 @@ namespace portfolio {
 
       private:
         /// Generates url to download data from alphavantage.
-        /// \param asset_code Symbol of asset. For B3 assets add ".SAO" after
+        /// \param asset_code Symbol of asset. For B3 assets_ add ".SAO" after
         /// the code. Example: "PETR4.SAO". \param tf Timeframe used on url.
         /// \return URL used to download alphavantage data.
         std::string generate_url(std::string_view asset_code, timeframe tf);
 
         /// \brief Access and download alphavantage data.
         /// \param historical_data Price_map where the query data will be saved.
-        /// \param asset_code Symbol of asset. For B3 assets add ".SAO" after
+        /// \param asset_code Symbol of asset. For B3 assets_ add ".SAO" after
         /// the code. Example: "PETR4.SAO". \param start_period Initial
         /// minute_point. \param end_period Final minute_point. \param tf
         /// Timeframe used on request. \return Price_map "filled" according to

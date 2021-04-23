@@ -1,24 +1,28 @@
 //
-// Created by eduar on 15/04/2021.
+// Created by eduardo on 15/04/2021.
 //
 
 #include "portfolio_mad.h"
 #include <iostream>
 #include <numeric>
+#include <random>
 namespace portfolio {
-    std::default_random_engine portfolio_mad::generator_ =
-        std::default_random_engine(
-            std::chrono::system_clock::now().time_since_epoch().count());
+
     portfolio_mad::portfolio_mad(market_data_mad &mad_data) {
+        static std::default_random_engine generator =
+            std::default_random_engine(
+                std::chrono::system_clock::now().time_since_epoch().count());
         std::uniform_real_distribution<double> d(0.0, 1.0);
-        for (auto &a : mad_data.assets) {
-            if (0.5 > d(this->generator_)) { // asset is selected or not
-                assets_[a] = d(this->generator_);
+        for (auto a = mad_data.assets_begin(); a != mad_data.assets_end();
+             ++a) {
+            if (0.5 > d(generator)) { // asset is selected or not
+                assets_[*a] = d(generator);
             } else {
-                assets_[a] = 0.0;
+                assets_[*a] = 0.0;
             }
         }
         normalize_allocation();
+        evaluate(mad_data);
     }
     void portfolio_mad::normalize_allocation() {
         double total = total_allocation();
@@ -30,40 +34,51 @@ namespace portfolio {
             }
             return;
         } else {
+            static std::default_random_engine generator =
+                std::default_random_engine(std::chrono::system_clock::now()
+                                               .time_since_epoch()
+                                               .count());
             std::uniform_real_distribution<double> d(1.0, 2.0);
             for (auto &[key, value] : assets_) {
-                assets_[key] = value * d(this->generator_);
+                assets_[key] = value * d(generator);
             }
             normalize_allocation();
             return;
         }
     }
     double portfolio_mad::total_allocation() {
-        double total = 0.0;
-        for (auto &elem : assets_) {
-            total += elem.second;
-        }
+        double total;
+        total = std::accumulate(
+            std::begin(assets_), std::end(assets_), 0.0,
+            [](double value,
+               const std::map<std::string, double>::value_type &p) {
+                return value + p.second;
+            });
         return total;
     }
     std::pair<double, double>
     portfolio_mad::evaluate(market_data_mad &mad_data) {
         double total_risk = 0.0;
         double total_return = 0.0;
-        for (auto &a : mad_data.assets) {
-            total_return += assets_[a] * mad_data.expected_return[a];
-            total_risk += assets_[a] * mad_data.risk[a];
+        for (auto a = mad_data.assets_begin(); a != mad_data.assets_end();
+             ++a) {
+            total_return += assets_[*a] * mad_data.expected_return_of(*a);
+            total_risk += assets_[*a] * mad_data.risk_of(*a);
         }
+        total_risk_ = total_risk;
+        expected_return_ = total_return;
         return std::make_pair(total_risk, total_return);
     }
-    void portfolio_mad::disp(market_data_mad &mad_data) {
-        std::cout << "Asset's allocation:" << std::endl;
-        for (auto &a : mad_data.assets) {
-            if (assets_[a] != 0.0) {
-                std::cout << a << ": " << assets_[a] << std::endl;
+
+    std::ostream &operator<<(std::ostream &os, const portfolio_mad &mad) {
+        os << "Asset's allocation:\n";
+        for (auto &a : mad.assets_) {
+            if (a.second != 0.0) {
+                os << a.first << ": " << a.second << "\n";
             }
         }
-        auto risk_return = evaluate(mad_data);
-        std::cout << "Total risk: " << risk_return.first
-                  << ". Expected return: " << risk_return.second << std::endl;
+        os << "Total risk_: " << mad.total_risk_
+           << ". Expected return: " << mad.expected_return_ << "\n";
+        return os;
     }
 } // namespace portfolio

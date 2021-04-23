@@ -12,20 +12,19 @@
 namespace portfolio {
     class market_data {
       public:
-        market_data(std::vector<std::string> asset_list,
+        market_data(const std::vector<std::string> &asset_list, data_feed &df,
                     minute_point start_period, minute_point end_period,
                     timeframe tf);
+
         std::vector<double> close_prices(std::string_view asset_code,
                                          int n_periods);
 
       protected:
-        std::vector<std::string> asset_list_;
+        std::map<std::string, portfolio::data_feed_result> assets_map_;
 
       private:
-        // std::vector<portfolio::data_feed_result> assets_data_;
-        std::map<std::string, portfolio::data_feed_result> assets_map_;
+        data_feed &data_feed_;
     };
-}
+} // namespace portfolio
 
-
-#endif //PORTFOLIO_MARKET_DATA_H
+#endif // PORTFOLIO_MARKET_DATA_H
