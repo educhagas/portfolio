@@ -50,7 +50,7 @@ namespace portfolio {
 
         /// \brief Find ohlc_prices of a closest minute_point.
         /// \param date_time Minute point for searching.
-        /// \return A iterator for closest price of date_time.
+        /// \return A ohlc_price for closest price of date_time.
         [[nodiscard]] ohlc_prices closest_prices(minute_point date_time) const;
 
         /// \brief Check if data feed result is empty.

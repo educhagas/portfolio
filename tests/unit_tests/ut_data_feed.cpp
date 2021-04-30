@@ -382,19 +382,32 @@ TEST_CASE("Alphavantage") {
         a.fetch("IBM", mp_start, mp_end, timeframe::monthly);
     REQUIRE(r_monthly2.empty() == false);
 }
-// TEST_CASE("MARKET_DATA"){
-//    using namespace portfolio;
-//    using namespace date::literals;
-//    using namespace std::chrono_literals;
-//    std::vector<std::string> assets = {"PETR4.SAO","VALE3.SAO", "ITUB4.SAO",
-//    "ABEV3.SAO", "BBDC4.SAO", "BBAS3.SAO", "CMIG4.SAO", "ELET3.SAO",
-//    "ITSA4.SAO", "MGLU3.SAO"};
-//    minute_point mp_start = date::sys_days{2018_y / 01 / 01} + 10h + 0min;
-//    minute_point mp_end = date::sys_days{2020_y / 12 / 31} + 18h + 0min;
-//    std::string_view api_key("demo");
-//    alphavantage_data_feed a(api_key);
-//    market_data_mad mad(assets,a, mp_start,mp_end,timeframe::daily,60);
-//    std::cout << mad;
-//    portfolio_mad portfolio(mad);
-//    std::cout << portfolio;
-//}
+TEST_CASE("MARKET_DATA_MAD_&_PORTFOLIO_MAD") {
+    using namespace portfolio;
+    using namespace date::literals;
+    using namespace std::chrono_literals;
+    std::vector<std::string> assets = {
+        "PETR4.SAO", "VALE3.SAO", "ITUB4.SAO", "ABEV3.SAO", "BBDC4.SAO",
+        "BBAS3.SAO", "CMIG4.SAO", "ELET3.SAO", "ITSA4.SAO", "MGLU3.SAO"};
+    minute_point mp_start = date::sys_days{2018_y / 01 / 01} + 10h + 0min;
+    minute_point mp_end = date::sys_days{2020_y / 12 / 31} + 18h + 0min;
+    mock_data_feed m;
+    market_data_mad mad(assets, m, mp_start, mp_end, timeframe::daily, 60);
+    SECTION("MARKET_DATA_MAD") {
+        // The expected return of each asset needs to be different from 0. Risk
+        // needs to be greater than 0.
+        for (auto it = mad.assets_begin(); it != mad.assets_end(); ++it) {
+            REQUIRE(mad.expected_return_of(*it) != 0);
+            REQUIRE(mad.risk_of(*it) > 0);
+        }
+    }
+    portfolio_mad portfolio(mad);
+    std::pair<double, double> risk_return;
+    risk_return = portfolio.evaluate(mad);
+    SECTION("PORTFOLIO_MAD") {
+        // The expected return needs to be different from 0. Risk needs to be
+        // greater than 0.
+        REQUIRE(risk_return.first > 0);
+        REQUIRE(risk_return.second != 0);
+    }
+}
