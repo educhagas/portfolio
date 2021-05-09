@@ -6,6 +6,7 @@
 #define PORTFOLIO_ALGORITHM_H
 #include "portfolio/data_feed/data_feed.h"
 #include <chrono>
+#include <cmath>
 #include <string>
 
 namespace portfolio {
