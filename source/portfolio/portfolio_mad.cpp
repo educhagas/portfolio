@@ -3,82 +3,56 @@
 //
 
 #include "portfolio_mad.h"
+#include "portfolio/common/algorithm.h"
 #include <iostream>
 #include <numeric>
 #include <random>
+#include <range/v3/core.hpp>
+#include <range/v3/numeric/accumulate.hpp>
 namespace portfolio {
-
-    portfolio_mad::portfolio_mad(market_data_mad &mad_data) {
-        static std::default_random_engine generator =
-            std::default_random_engine(
-                std::chrono::system_clock::now().time_since_epoch().count());
-        std::uniform_real_distribution<double> d(0.0, 1.0);
-        for (auto a = mad_data.assets_begin(); a != mad_data.assets_end();
+    portfolio_mad::portfolio_mad(const market_data &data,
+                                 interval_points interval, int n_periods)
+        : interval_(std::move(interval)) {
+        n_periods_ = n_periods;
+        for (auto a = data.assets_map_begin(); a != data.assets_map_end();
              ++a) {
-            if (0.5 > d(generator)) { // asset is selected or not
-                assets_[*a] = d(generator);
-            } else {
-                assets_[*a] = 0.0;
+            data_feed_result df = a->second;
+            auto price_it = df.find_prices_from(interval_);
+            if (price_it == df.end()) {
+                throw std::runtime_error(
+                    "MAD_PORTFOLIO constructor error: interval not found.");
             }
-        }
-        normalize_allocation();
-        evaluate(mad_data);
-    }
-    void portfolio_mad::normalize_allocation() {
-        double total = total_allocation();
-        if (total == 1.0) {
-            return;
-        } else if (total > 1.0) {
-            for (auto &[key, value] : assets_) {
-                assets_[key] = value / total;
+            for (size_t i = 0; i < n_periods_ + 1; ++i) {
+                if (price_it != df.begin())
+                    price_it--;
+                else
+                    throw std::runtime_error("MAD_PORTFOLIO constructor error: "
+                                             "n_periods out of market_data.");
             }
-            return;
-        } else {
-            static std::default_random_engine generator =
-                std::default_random_engine(std::chrono::system_clock::now()
-                                               .time_since_epoch()
-                                               .count());
-            std::uniform_real_distribution<double> d(1.0, 2.0);
-            for (auto &[key, value] : assets_) {
-                assets_[key] = value * d(generator);
+            std::vector<double> asset_returns;
+            for (size_t i = 0; i < n_periods_; ++i) {
+                double price_0 = price_it->second.close();
+                price_it++;
+                double price_1 = price_it->second.close();
+                asset_returns.push_back((price_1 - price_0) / price_0);
             }
-            normalize_allocation();
-            return;
+            double mean =
+                ranges::accumulate(asset_returns, 0.0) / asset_returns.size();
+            double mad = ranges::accumulate(asset_returns, 0.0,
+                                            [mean](double mad, double d) {
+                                                return mad + std::abs(d - mean);
+                                            }) /
+                         asset_returns.size();
+            assets_risk_return_[a->first] = std::make_pair(mad, mean);
         }
     }
-    double portfolio_mad::total_allocation() {
-        double total;
-        total = std::accumulate(
-            std::begin(assets_), std::end(assets_), 0.0,
-            [](double value,
-               const std::map<std::string, double>::value_type &p) {
-                return value + p.second;
-            });
-        return total;
+    interval_points portfolio_mad::interval() const { return interval_; }
+    int portfolio_mad::n_periods() const { return n_periods_; }
+    double portfolio_mad::risk(std::string_view asset) const {
+        return assets_risk_return_.at(std::string(asset)).first;
     }
-    std::pair<double, double>
-    portfolio_mad::evaluate(market_data_mad &mad_data) {
-        double total_risk = 0.0;
-        double total_return = 0.0;
-        for (auto a = mad_data.assets_begin(); a != mad_data.assets_end();
-             ++a) {
-            total_return += assets_[*a] * mad_data.expected_return_of(*a);
-            total_risk += assets_[*a] * mad_data.risk_of(*a);
-        }
-        total_risk_ = total_risk;
-        expected_return_ = total_return;
-        return std::make_pair(total_risk, total_return);
+    double portfolio_mad::expected_return(std::string_view asset) const {
+        return assets_risk_return_.at(std::string(asset)).second;
     }
 
-    std::ostream &operator<<(std::ostream &os, const portfolio_mad &mad) {
-        os << "Asset's allocation:\n";
-        for (auto &a : mad.assets_) {
-            if (a.second != 0.0) {
-                os << a.first << ": " << a.second << "\n";
-            }
-        }
-        os << "Total risk_: " << mad.total_risk_
-           << ". Expected return: " << mad.expected_return_ << "\n";
-        return os;
-    }
 } // namespace portfolio

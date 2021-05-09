@@ -15,14 +15,16 @@ namespace portfolio {
         market_data(const std::vector<std::string> &asset_list, data_feed &df,
                     minute_point start_period, minute_point end_period,
                     timeframe tf);
-
-        std::vector<double> close_prices(std::string_view asset_code,
-                                         int n_periods);
-
-      protected:
-        std::map<std::string, portfolio::data_feed_result> assets_map_;
+        [[nodiscard]] std::map<std::string,
+                               portfolio::data_feed_result>::const_iterator
+        assets_map_begin() const;
+        [[nodiscard]] std::map<std::string,
+                               portfolio::data_feed_result>::const_iterator
+        assets_map_end() const;
+        [[nodiscard]] bool contains(std::string_view asset) const;
 
       private:
+        std::map<std::string, portfolio::data_feed_result> assets_map_;
         data_feed &data_feed_;
     };
 } // namespace portfolio

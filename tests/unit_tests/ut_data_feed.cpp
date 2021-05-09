@@ -3,8 +3,8 @@
 #include "portfolio/common/algorithm.h"
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
-#include "portfolio/market_data_mad.h"
-#include "portfolio/portfolio_mad.h"
+#include "portfolio/market_data.h"
+#include "portfolio/portfolio.h"
 #include <catch2/catch.hpp>
 #include <chrono>
 TEST_CASE("Mock Data Feed") {
@@ -356,7 +356,7 @@ TEST_CASE("Alphavantage") {
     using namespace portfolio;
     using namespace date::literals;
     using namespace std::chrono_literals;
-    // To test other assets_ and timeframes, use a valid API key.
+    // To test other assets_proportions_ and timeframes, use a valid API key.
     // https://www.alphavantage.co/
     std::string_view api_key("demo");
     alphavantage_data_feed a(api_key);
@@ -382,32 +382,48 @@ TEST_CASE("Alphavantage") {
         a.fetch("IBM", mp_start, mp_end, timeframe::monthly);
     REQUIRE(r_monthly2.empty() == false);
 }
-TEST_CASE("MARKET_DATA_MAD_&_PORTFOLIO_MAD") {
-    using namespace portfolio;
+TEST_CASE("MARKET_DATA_&_PORTFOLIO") {
+    // using namespace portfolio;
     using namespace date::literals;
     using namespace std::chrono_literals;
     std::vector<std::string> assets = {
         "PETR4.SAO", "VALE3.SAO", "ITUB4.SAO", "ABEV3.SAO", "BBDC4.SAO",
         "BBAS3.SAO", "CMIG4.SAO", "ELET3.SAO", "ITSA4.SAO", "MGLU3.SAO"};
-    minute_point mp_start = date::sys_days{2018_y / 01 / 01} + 10h + 0min;
-    minute_point mp_end = date::sys_days{2020_y / 12 / 31} + 18h + 0min;
-    mock_data_feed m;
-    market_data_mad mad(assets, m, mp_start, mp_end, timeframe::daily, 60);
-    SECTION("MARKET_DATA_MAD") {
-        // The expected return of each asset needs to be different from 0. Risk
-        // needs to be greater than 0.
-        for (auto it = mad.assets_begin(); it != mad.assets_end(); ++it) {
-            REQUIRE(mad.expected_return_of(*it) != 0);
-            REQUIRE(mad.risk_of(*it) > 0);
-        }
+    portfolio::minute_point mp_start =
+        date::sys_days{2018_y / 01 / 01} + 10h + 0min;
+    portfolio::minute_point mp_end =
+        date::sys_days{2020_y / 12 / 31} + 18h + 0min;
+    portfolio::minute_point start_interval =
+        date::sys_days{2020_y / 01 / 06} + 10h + 0min;
+    portfolio::minute_point end_interval =
+        date::sys_days{2020_y / 01 / 06} + 18h + 0min;
+    portfolio::interval_points interval =
+        std::make_pair(start_interval, end_interval);
+    portfolio::mock_data_feed mock_df;
+    portfolio::market_data md(assets, mock_df, mp_start, mp_end,
+                              portfolio::timeframe::daily);
+
+    SECTION("MARKET_DATA_CONTAINS") {
+        REQUIRE(md.contains("ABEV3.SAO"));
+        REQUIRE_FALSE(md.contains("ABEH3.SAO"));
     }
-    portfolio_mad portfolio(mad);
-    std::pair<double, double> risk_return;
-    risk_return = portfolio.evaluate(mad);
+    portfolio::portfolio port(md);
     SECTION("PORTFOLIO_MAD") {
-        // The expected return needs to be different from 0. Risk needs to be
-        // greater than 0.
+        // The expected return of portfolio needs to be different from 0. Risk
+        // needs to be greater than 0.
+        auto risk_return = port.evaluate_mad(md, interval, 40);
         REQUIRE(risk_return.first > 0);
         REQUIRE(risk_return.second != 0);
+        end_interval = date::sys_days{2020_y / 01 / 01} + 18h + 01min;
+        interval = std::make_pair(start_interval, end_interval);
+        // If the interval is not valid, it throws an exception and ends the
+        // execution.
+        REQUIRE_THROWS(port.evaluate_mad(md, interval, 40));
+        start_interval = date::sys_days{2018_y / 02 / 01} + 10h + 0min;
+        end_interval = date::sys_days{2018_y / 02 / 01} + 18h + 00min;
+        interval = std::make_pair(start_interval, end_interval);
+        // If the period is greater than the number of previous intervals in
+        // market_data, it throws an exception and ends the execution.
+        REQUIRE_THROWS(port.evaluate_mad(md, interval, 30));
     }
 }

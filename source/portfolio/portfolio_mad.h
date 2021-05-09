@@ -4,21 +4,23 @@
 
 #ifndef PORTFOLIO_PORTFOLIO_MAD_H
 #define PORTFOLIO_PORTFOLIO_MAD_H
-#include "market_data_mad.h"
-#include "portfolio.h"
-#include <ostream>
+
+#include "market_data.h"
 
 namespace portfolio {
-    class portfolio_mad : public portfolio {
+    class portfolio_mad {
       public:
-        explicit portfolio_mad(market_data_mad &mad_data);
-        std::pair<double, double> evaluate(market_data_mad &mad_data);
-        friend std::ostream &operator<<(std::ostream &os,
-                                        const portfolio_mad &mad);
+        portfolio_mad(const market_data &data, interval_points interval,
+                      int n_periods);
+        [[nodiscard]] interval_points interval() const;
+        [[nodiscard]] int n_periods() const;
+        [[nodiscard]] double risk(std::string_view asset) const;
+        [[nodiscard]] double expected_return(std::string_view asset) const;
 
       private:
-        void normalize_allocation();
-        double total_allocation();
+        interval_points interval_;
+        int n_periods_;
+        std::map<std::string, std::pair<double, double>> assets_risk_return_;
     };
 
 } // namespace portfolio

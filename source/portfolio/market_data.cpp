@@ -16,25 +16,19 @@ namespace portfolio {
         for (auto &str : asset_list) {
             data_feed_result data =
                 data_feed_.fetch(str, start_period, end_period, tf);
-            assets_map_.insert(std::move(std::make_pair(str, data)));
+            assets_map_.emplace(str, std::move(data));
         }
     }
-    std::vector<double> market_data::close_prices(std::string_view asset_code,
-                                                  int n_periods) {
-        std::string str_asset(asset_code);
-        data_feed_result result(assets_map_.at(str_asset));
-        std::vector<double> all_closes;
-        std::for_each(result.begin(), result.end(),
-                      [&all_closes](const price_map::value_type &p) {
-                          all_closes.push_back(p.second.close());
-                      });
-        std::vector<double> closes;
-
-        for (auto it = all_closes.end() - n_periods; it != all_closes.end();
-             ++it) {
-            closes.push_back(*it);
-        }
-        return closes;
+    std::map<std::string, portfolio::data_feed_result>::const_iterator
+    market_data::assets_map_begin() const {
+        return assets_map_.cbegin();
+    }
+    std::map<std::string, portfolio::data_feed_result>::const_iterator
+    market_data::assets_map_end() const {
+        return assets_map_.cend();
+    }
+    bool market_data::contains(std::string_view asset) const {
+        return assets_map_.find(std::string(asset)) != assets_map_.end();
     }
 
 } // namespace portfolio

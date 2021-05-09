@@ -12,9 +12,12 @@ namespace portfolio {
     class alphavantage_data_feed : public data_feed {
       public:
         /// \brief Constructor of alphavantage_data_feed
-        /// \param apiKey - Free API key used to access data from:
+        /// \param apiKey - API key used to access data from:
         /// https://www.alphavantage.co/
-        explicit alphavantage_data_feed(const std::string_view &apiKey);
+        /// \param api_key_is_free Indicates whether API key is free or not. If
+        /// it is free, it restricts a maximum of 5 requests per minute.
+        explicit alphavantage_data_feed(const std::string_view &apiKey,
+                                        bool api_key_is_free = true);
 
         /// \brief Fetch price data from alphavantage and saves it in price_map.
         /// \param start_period Initial minute_point.
@@ -27,16 +30,16 @@ namespace portfolio {
 
       private:
         /// Generates url to download data from alphavantage.
-        /// \param asset_code Symbol of asset. For B3 assets_ add ".SAO" after
-        /// the code. Example: "PETR4.SAO". \param tf Timeframe used on url.
-        /// \return URL used to download alphavantage data.
+        /// \param asset_code Symbol of asset. For B3 assets_proportions_ add
+        /// ".SAO" after the code. Example: "PETR4.SAO". \param tf Timeframe
+        /// used on url./// \return URL used to download alphavantage data.
         std::string generate_url(std::string_view asset_code, timeframe tf);
 
         /// \brief Access and download alphavantage data.
         /// \param historical_data Price_map where the query data will be saved.
-        /// \param asset_code Symbol of asset. For B3 assets_ add ".SAO" after
-        /// the code. Example: "PETR4.SAO". \param start_period Initial
-        /// minute_point. \param end_period Final minute_point. \param tf
+        /// \param asset_code Symbol of asset. For B3 assets_proportions_ add
+        /// ".SAO" after the code. Example: "PETR4.SAO". \param start_period
+        /// Initial/// minute_point. \param end_period Final minute_point. \param tf
         /// Timeframe used on request. \return Price_map "filled" according to
         /// the input parameters.
         bool request_online_data(price_map &historical_data,
@@ -87,6 +90,7 @@ namespace portfolio {
                        nlohmann::json j_data);
 
         std::string_view api_key_;
+        bool api_key_is_free_;
     };
 } // namespace portfolio
 #endif // PORTFOLIO_ALPHAVANTAGE_DATA_FEED_H
