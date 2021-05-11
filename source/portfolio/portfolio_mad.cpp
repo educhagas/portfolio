@@ -22,7 +22,7 @@ namespace portfolio {
                 throw std::runtime_error(
                     "MAD_PORTFOLIO constructor error: interval not found.");
             }
-            for (size_t i = 0; i < n_periods_ + 1; ++i) {
+            for (size_t i = 0; i < n_periods_; ++i) {
                 if (price_it != df.begin())
                     price_it--;
                 else

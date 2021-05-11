@@ -359,7 +359,7 @@ TEST_CASE("Alphavantage") {
     // To test other assets_proportions_ and timeframes, use a valid API key.
     // https://www.alphavantage.co/
     std::string_view api_key("demo");
-    alphavantage_data_feed a(api_key);
+    alphavantage_data_feed a(api_key, true);
 
     minute_point mp_start = date::sys_days{2019_y / 01 / 01} + 10h + 0min;
     minute_point mp_end = date::sys_days{2020_y / 12 / 31} + 18h + 0min;
@@ -382,8 +382,7 @@ TEST_CASE("Alphavantage") {
         a.fetch("IBM", mp_start, mp_end, timeframe::monthly);
     REQUIRE(r_monthly2.empty() == false);
 }
-TEST_CASE("MARKET_DATA_&_PORTFOLIO") {
-    // using namespace portfolio;
+TEST_CASE("Portfolio and Market Data") {
     using namespace date::literals;
     using namespace std::chrono_literals;
     std::vector<std::string> assets = {
@@ -403,12 +402,12 @@ TEST_CASE("MARKET_DATA_&_PORTFOLIO") {
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
                               portfolio::timeframe::daily);
 
-    SECTION("MARKET_DATA_CONTAINS") {
+    SECTION("Market Data") {
         REQUIRE(md.contains("ABEV3.SAO"));
         REQUIRE_FALSE(md.contains("ABEH3.SAO"));
     }
     portfolio::portfolio port(md);
-    SECTION("PORTFOLIO_MAD") {
+    SECTION("Portfolio") {
         // The expected return of portfolio needs to be different from 0. Risk
         // needs to be greater than 0.
         auto risk_return = port.evaluate_mad(md, interval, 40);

@@ -63,8 +63,8 @@ namespace portfolio {
                                                       interval_points interval,
                                                       int n_periods) {
         if (mad_) {
-            if (mad_.value().n_periods() != n_periods ||
-                mad_.value().interval() != interval) {
+            if (mad_->n_periods() != n_periods ||
+                mad_->interval() != interval) {
                 mad_.reset();
                 mad_.emplace(data, interval, n_periods);
             }
@@ -74,8 +74,8 @@ namespace portfolio {
         double total_risk = 0.0;
         double total_return = 0.0;
         for (auto &a : assets_proportions_) {
-            total_risk += a.second * mad_.value().risk(a.first);
-            total_return += a.second * mad_.value().expected_return(a.first);
+            total_risk += a.second * mad_->risk(a.first);
+            total_return += a.second * mad_->expected_return(a.first);
         }
         return std::make_pair(total_risk, total_return);
     }
@@ -86,8 +86,8 @@ namespace portfolio {
                 os << "Asset: " << a.first << " - Allocation " << a.second;
                 if (portfolio1.mad_) {
                     os << " - Expect return: "
-                       << portfolio1.mad_.value().expected_return(a.first);
-                    os << " - Risk: " << portfolio1.mad_.value().risk(a.first);
+                       << portfolio1.mad_->expected_return(a.first);
+                    os << " - Risk: " << portfolio1.mad_->risk(a.first);
                 }
                 os << "\n";
             }

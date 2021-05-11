@@ -87,8 +87,7 @@ namespace portfolio {
     }
     bool is_floating(std::string_view str_view) {
         std::string str(str_view);
-        unsigned int len;
-        len = str.size();
+        const unsigned int len = str.length();
         if (len == 0) {
             return false;
         } else if (len == 1) {
