@@ -25,7 +25,7 @@ include(${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
 ### Tests                                           ###
 #######################################################
 add_executable(ut_data_feed ut_data_feed.cpp)
+add_executable(ut_portfolio ut_portfolio.cpp)
 target_link_libraries(ut_data_feed PUBLIC portfolio Catch2)
-catch_discover_tests(ut_data_feed)
-
-
+target_link_libraries(ut_portfolio PUBLIC portfolio Catch2)
+catch_discover_tests(ut_data_feed ut_portfolio)

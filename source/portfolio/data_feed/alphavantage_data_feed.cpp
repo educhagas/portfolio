@@ -11,8 +11,8 @@
 namespace portfolio {
 
     alphavantage_data_feed::alphavantage_data_feed(
-        const std::string_view &apiKey)
-        : api_key(apiKey) {
+        const std::string_view &apiKey, bool api_key_is_free)
+        : api_key_(apiKey), api_key_is_free_(api_key_is_free) {
         std::string path = "./";
         bool data_folder_exists = false;
         for (const auto &entry : std::filesystem::directory_iterator(path)) {
@@ -25,6 +25,8 @@ namespace portfolio {
         if (!data_folder_exists) {
             std::filesystem::create_directory("./stock_data");
         }
+        last_request_tp_ =
+            std::chrono::system_clock::now() - std::chrono::seconds(20);
     }
     std::string
     alphavantage_data_feed::generate_url(std::string_view asset_code,
@@ -48,7 +50,7 @@ namespace portfolio {
         url += "&symbol=";
         url += asset_code;
         url += "&apikey=";
-        url += api_key;
+        url += api_key_;
         return url;
     }
 
@@ -98,13 +100,12 @@ namespace portfolio {
         }
         if (need_online_search) {
             price_map hist;
-            if (!request_online_data(hist, asset_code, start_period, end_period,
-                                     tf)) {
+            if (!request_online(hist, asset_code, start_period, end_period,
+                                tf)) {
                 std::cerr << "Error on data requesting." << std::endl;
             }
             return data_feed_result(hist);
         } else {
-
             std::string line;
             std::ifstream fin(file_path);
             if (fin.is_open()) {
@@ -123,7 +124,6 @@ namespace portfolio {
                 }
                 price_from_file[string_to_interval_points(el.key())] = ohlc;
             }
-
             price_map historical;
             if (!has_error) {
                 for (auto &item : price_from_file) {
@@ -136,11 +136,23 @@ namespace portfolio {
             return data_feed_result(historical);
         }
     }
-    bool alphavantage_data_feed::request_online_data(
-        price_map &historical_data, std::string_view asset_code,
-        minute_point start_period, minute_point end_period, timeframe tf) {
+    bool alphavantage_data_feed::request_online(price_map &historical_data,
+                                                std::string_view asset_code,
+                                                minute_point start_period,
+                                                minute_point end_period,
+                                                timeframe tf) {
+        // If the API key is free, wait 20 seconds to ensure that there will be
+        // a maximum of 5 requests per minute.
+        if (api_key_is_free_) {
+            std::chrono::duration<double> diff =
+                std::chrono::system_clock::now() - last_request_tp_;
+            std::this_thread::sleep_for(
+                std::chrono::seconds(20) -
+                std::chrono::duration_cast<std::chrono::seconds>(diff));
+        }
         std::string url = generate_url(asset_code, tf);
         cpr::Response r = cpr::Get(cpr::Url{url});
+        last_request_tp_ = std::chrono::system_clock::now();
         if (r.status_code != 200) {
             throw std::runtime_error("Cannot request data: " + url);
         }

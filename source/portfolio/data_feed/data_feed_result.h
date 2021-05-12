@@ -17,7 +17,14 @@ namespace portfolio {
     using price_iterator = price_map::iterator;
     class data_feed_result {
       public /* constructors */:
-
+        bool operator==(const data_feed_result &rhs) const;
+        bool operator!=(const data_feed_result &rhs) const;
+        bool operator<(const data_feed_result &rhs) const;
+        bool operator>(const data_feed_result &rhs) const;
+        bool operator<=(const data_feed_result &rhs) const;
+        bool operator>=(const data_feed_result &rhs) const;
+        data_feed_result &operator=(const data_feed_result &rhs);
+        data_feed_result(const data_feed_result &rhs);
         /// \brief Class constructor
         /// \param historical_data Asset data to be stored.
         explicit data_feed_result(price_map historical_data);
@@ -33,13 +40,17 @@ namespace portfolio {
         /// founded.
         price_iterator find_prices_from(interval_points interval);
 
+        /// \brief Get a iterator for begin of price_map.
+        /// \return A iterator for begin of price_map.
+        price_iterator begin();
+
         /// \brief Get a iterator for end of price_map.
         /// \return A iterator for end of price_map.
         price_iterator end();
 
         /// \brief Find ohlc_prices of a closest minute_point.
         /// \param date_time Minute point for searching.
-        /// \return A iterator for closest price of date_time.
+        /// \return A ohlc_price for closest price of date_time.
         [[nodiscard]] ohlc_prices closest_prices(minute_point date_time) const;
 
         /// \brief Check if data feed result is empty.

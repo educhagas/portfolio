@@ -3,7 +3,6 @@
 //
 
 #include "algorithm.h"
-#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <stdexcept>
@@ -23,13 +22,10 @@ namespace portfolio {
 
     minute_point string_to_minute_point(std::string_view str_mp) {
         std::string str(str_mp);
-        std::tm tm = {};
+        std::chrono::system_clock::time_point dt;
         std::stringstream ss(str);
-        ss >> std::get_time(&tm, "%Y-%m-%d_%H-%M");
-        std::chrono::system_clock::time_point tp =
-            std::chrono::system_clock::from_time_t(mktime(&tm));
-        using namespace std::chrono_literals;
-        return std::chrono::floor<std::chrono::minutes>(tp);
+        ss >> date::parse("%Y-%m-%d_%H-%M", dt);
+        return std::chrono::floor<std::chrono::minutes>(dt);
     }
 
     interval_points string_to_interval_points(std::string_view str_interval) {
@@ -91,7 +87,7 @@ namespace portfolio {
     }
     bool is_floating(std::string_view str_view) {
         std::string str(str_view);
-        int len = str.length();
+        const unsigned int len = str.length();
         if (len == 0) {
             return false;
         } else if (len == 1) {
@@ -138,5 +134,4 @@ namespace portfolio {
             }
         }
     }
-
 } // namespace portfolio

@@ -1,10 +1,11 @@
 #define CATCH_CONFIG_MAIN
 
+#include "portfolio/common/algorithm.h"
+#include "portfolio/data_feed/alphavantage_data_feed.h"
+#include "portfolio/data_feed/mock_data_feed.h"
+#include "portfolio/market_data.h"
 #include <catch2/catch.hpp>
 #include <chrono>
-#include <portfolio/common/algorithm.h>
-#include <portfolio/data_feed/alphavantage_data_feed.h>
-#include <portfolio/data_feed/mock_data_feed.h>
 TEST_CASE("Mock Data Feed") {
     using namespace portfolio;
     using namespace date::literals;
@@ -354,10 +355,10 @@ TEST_CASE("Alphavantage") {
     using namespace portfolio;
     using namespace date::literals;
     using namespace std::chrono_literals;
-    // To test other assets and timeframes, use a valid API key.
+    // To test other assets_proportions_ and timeframes, use a valid API key.
     // https://www.alphavantage.co/
     std::string_view api_key("demo");
-    alphavantage_data_feed a(api_key);
+    alphavantage_data_feed a(api_key, true);
 
     minute_point mp_start = date::sys_days{2019_y / 01 / 01} + 10h + 0min;
     minute_point mp_end = date::sys_days{2020_y / 12 / 31} + 18h + 0min;

@@ -6,6 +6,7 @@
 #define PORTFOLIO_ALGORITHM_H
 #include "portfolio/data_feed/data_feed.h"
 #include <chrono>
+#include <cmath>
 #include <string>
 
 namespace portfolio {
@@ -57,5 +58,17 @@ namespace portfolio {
     /// \param tf Timeframe of data.
     /// \return Initial part of local data file used to search for this file.
     std::string start_filename(std::string_view asset_code, timeframe tf);
+
+    template <class T>
+    typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+    almost_equal(T x, T y, int precision = 5) {
+        // the machine epsilon has to be scaled to the magnitude of the values
+        // used and multiplied by the desired precision in ULPs (units in the
+        // last place)
+        return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() *
+                                       std::fabs(x + y) * precision
+               // unless the result is subnormal
+               || std::fabs(x - y) < std::numeric_limits<T>::min();
+    }
 } // namespace portfolio
 #endif // PORTFOLIO_ALGORITHM_H
