@@ -20,14 +20,19 @@ namespace portfolio {
                 std::chrono::system_clock::now().time_since_epoch().count());
         std::uniform_real_distribution<double> d_real(0.0, 1.0);
         std::binomial_distribution<int> d_binomial(1, 0.5);
-        for (auto a = data.assets_map_begin(); a != data.assets_map_end();
-             ++a) {
-            if (1 == d_binomial(generator)) { // asset is selected or not
-                assets_proportions_[a->first] = d_real(generator);
-            } else {
-                assets_proportions_[a->first] = 0.0;
+        int count_assets = 0;
+        while (count_assets == 0) {
+            for (auto a = data.assets_map_begin(); a != data.assets_map_end();
+                 ++a) {
+                if (1 == d_binomial(generator)) { // asset is selected or not
+                    assets_proportions_[a->first] = d_real(generator);
+                    count_assets++;
+                } else {
+                    assets_proportions_[a->first] = 0.0;
+                }
             }
         }
+
         normalize_allocation();
     }
     void portfolio::normalize_allocation() {
@@ -44,8 +49,11 @@ namespace portfolio {
                 });
             return;
         } else {
-            for (auto &[key, value] : assets_proportions_)
-                assets_proportions_[key] = value / total;
+            for (auto &[key, value] : assets_proportions_) {
+                if (!almost_equal(value, 0.0)) {
+                    assets_proportions_[key] = value / total;
+                }
+            }
             return;
         }
     }
@@ -93,5 +101,41 @@ namespace portfolio {
             }
         }
         return os;
+    }
+    void portfolio::mutation(portfolio &p, double mutation_strength) {
+        static std::default_random_engine generator =
+            std::default_random_engine(
+                std::chrono::system_clock::now().time_since_epoch().count());
+        std::normal_distribution<double> d(0, mutation_strength);
+        for (auto &[key, _] : assets_proportions_) {
+            this->assets_proportions_.at(key) += d(generator);
+            normalize_allocation();
+        }
+    }
+    portfolio portfolio::crossover(const market_data &data, portfolio &rhs) {
+        static std::default_random_engine generator =
+            std::default_random_engine(
+                std::chrono::system_clock::now().time_since_epoch().count());
+        std::uniform_real_distribution<double> d(0., 1.);
+        double alpha = d(generator);
+        portfolio child(data);
+        for (auto &[key, _] : assets_proportions_) {
+            child.assets_proportions_[key] =
+                alpha * this->assets_proportions_.at(key) +
+                (1 - alpha) * rhs.assets_proportions_.at(key);
+        }
+        return child;
+    }
+    double portfolio::distance(market_data &data, portfolio &rhs,
+                               double max_dist) {
+        double total = 0.0;
+        for (auto &[key, _] : assets_proportions_) {
+            total += std::abs(rhs.assets_proportions_.at(key) -
+                              assets_proportions_.at(key));
+            if (total > max_dist) {
+                return total;
+            }
+        }
+        return total;
     }
 } // namespace portfolio

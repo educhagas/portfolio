@@ -3,7 +3,7 @@
 //
 
 #include "market_data.h"
-
+#include "portfolio/common/algorithm.h"
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include <ranges>
 #include <utility>
@@ -29,6 +29,22 @@ namespace portfolio {
     }
     bool market_data::contains(std::string_view asset) const {
         return assets_map_.find(std::string(asset)) != assets_map_.end();
+    }
+    std::ostream &operator<<(std::ostream &os, const market_data &data) {
+        os << "List of assets: \n";
+        for (auto &[key, _] : data.assets_map_) {
+            os << key << "\n";
+        }
+        using namespace date;
+        os << "Start point: "
+           << portfolio::minute_point_to_string(
+                  data.assets_map_.begin()->second.start_point())
+           << "\n";
+        os << "End point: "
+           << portfolio::minute_point_to_string(
+                  data.assets_map_.begin()->second.end_point())
+           << "\n";
+        return os;
     }
 
 } // namespace portfolio

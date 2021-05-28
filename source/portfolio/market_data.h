@@ -7,6 +7,7 @@
 #include "portfolio/data_feed/data_feed.h"
 #include "portfolio/data_feed/data_feed_result.h"
 #include <map>
+#include <ostream>
 #include <string_view>
 #include <vector>
 namespace portfolio {
@@ -22,6 +23,8 @@ namespace portfolio {
                                portfolio::data_feed_result>::const_iterator
         assets_map_end() const;
         [[nodiscard]] bool contains(std::string_view asset) const;
+        friend std::ostream &operator<<(std::ostream &os,
+                                        const market_data &data);
 
       private:
         std::map<std::string, portfolio::data_feed_result> assets_map_;
