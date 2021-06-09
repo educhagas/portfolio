@@ -36,6 +36,11 @@ namespace portfolio {
         normalize_allocation();
     }
     void portfolio::normalize_allocation() {
+        for (auto &[key, value] : assets_proportions_) {
+            if (value < 0.0) {
+                assets_proportions_[key] = (-1) * value;
+            }
+        }
         double total = total_allocation();
         if (almost_equal(total, 1.0, 5)) {
             return;
@@ -102,7 +107,7 @@ namespace portfolio {
         }
         return os;
     }
-    void portfolio::mutation(portfolio &p, double mutation_strength) {
+    void portfolio::mutation(market_data &p, double mutation_strength) {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
@@ -124,6 +129,7 @@ namespace portfolio {
                 alpha * this->assets_proportions_.at(key) +
                 (1 - alpha) * rhs.assets_proportions_.at(key);
         }
+        child.normalize_allocation();
         return child;
     }
     double portfolio::distance(market_data &data, portfolio &rhs,

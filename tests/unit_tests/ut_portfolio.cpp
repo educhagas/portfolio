@@ -4,6 +4,7 @@
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
 #include "portfolio/market_data.h"
+#include "portfolio/naive_EA.h"
 #include "portfolio/portfolio.h"
 #include <catch2/catch.hpp>
 #include <chrono>
@@ -133,10 +134,16 @@ TEST_CASE("Naive EA") {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
+    // portfolio::alphavantage_data_feed af("demo", false);
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
                               portfolio::timeframe::daily);
+    //    portfolio::market_data md(assets, af, mp_start, mp_end,
+    //                              portfolio::timeframe::daily);
     portfolio::portfolio port(md);
-    random_search<portfolio::market_data, portfolio::portfolio>(
-        assets, mock_df, mp_start, mp_end, portfolio::timeframe::daily,
-        interval, 30);
+    //    random_search<portfolio::market_data, portfolio::portfolio>(
+    //        assets, mock_df, mp_start, mp_end, portfolio::timeframe::daily,
+    //        interval, 30);
+    portfolio::naive_EA solver(port, md, interval, 40);
+    solver.run(3, 0.1);
+    // solver.run();
 }

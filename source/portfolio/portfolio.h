@@ -26,7 +26,7 @@ namespace portfolio {
         friend std::ostream &operator<<(std::ostream &os,
                                         const portfolio &portfolio1);
 
-        void mutation(portfolio &p, double mutation_strength);
+        void mutation(market_data &p, double mutation_strength);
         portfolio crossover(const market_data &data, portfolio &rhs);
         double distance(market_data &data, portfolio &rhs,
                         double max_dist = std::numeric_limits<double>::max());

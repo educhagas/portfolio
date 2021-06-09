@@ -46,5 +46,6 @@ namespace portfolio {
            << "\n";
         return os;
     }
+    size_t market_data::size() { return assets_map_.size(); }
 
 } // namespace portfolio

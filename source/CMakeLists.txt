@@ -48,6 +48,29 @@ if (NOT json_POPULATED)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
 
+#Library pareto
+FetchContent_Declare(pareto
+        GIT_REPOSITORY https://github.com/alandefreitas/pareto
+        GIT_TAG origin/master # or whatever tag you want
+        )
+
+FetchContent_GetProperties(pareto)
+if (NOT pareto_POPULATED)
+    FetchContent_Populate(pareto)
+    add_subdirectory(${pareto_SOURCE_DIR} ${pareto_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+
+#Library matplot
+FetchContent_Declare(matplotplusplus
+        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
+        GIT_TAG origin/master # or whatever tag you want
+        )
+
+FetchContent_GetProperties(matplotplusplus)
+if (NOT matplotplusplus_POPULATED)
+    FetchContent_Populate(matplotplusplus)
+    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
 
 #######################################################
 ### Library                                         ###
@@ -70,13 +93,14 @@ add_library(portfolio
         portfolio/core/ohlc_prices.h
         portfolio/core/ohlc_prices.cpp
         portfolio/portfolio_mad.cpp
-        portfolio/portfolio_mad.h)
+        portfolio/portfolio_mad.h
+        portfolio/naive_EA.h
+        portfolio/naive_EA.cpp)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 
-target_link_libraries(portfolio PUBLIC Threads::Threads range-v3 date::date nlohmann_json::nlohmann_json cpr::cpr
-        )
+target_link_libraries(portfolio PUBLIC Threads::Threads range-v3 date::date nlohmann_json::nlohmann_json cpr::cpr pareto matplot)
 target_pedantic_options(portfolio)
 target_exception_options(portfolio)
