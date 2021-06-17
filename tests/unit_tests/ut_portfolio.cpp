@@ -6,6 +6,7 @@
 #include "portfolio/market_data.h"
 #include "portfolio/naive_EA.h"
 #include "portfolio/portfolio.h"
+#include "portfolio/random_search.h"
 #include <catch2/catch.hpp>
 #include <chrono>
 
@@ -120,9 +121,36 @@ TEST_CASE("Naive EA") {
     using namespace date::literals;
     using namespace std::chrono_literals;
 
+    //    std::vector<std::string> assets = {
+    //        "PETR4.SAO", "VALE3.SAO", "ITUB4.SAO", "ABEV3.SAO", "BBDC4.SAO",
+    //        "BBAS3.SAO", "CMIG4.SAO", "ELET3.SAO", "ITSA4.SAO", "MGLU3.SAO"};
     std::vector<std::string> assets = {
-        "PETR4.SAO", "VALE3.SAO", "ITUB4.SAO", "ABEV3.SAO", "BBDC4.SAO",
-        "BBAS3.SAO", "CMIG4.SAO", "ELET3.SAO", "ITSA4.SAO", "MGLU3.SAO"};
+        "ABEV3.SAO", "ALPA4.SAO",  "ALSO3.SAO",  "AMAR3.SAO",
+        "AZUL4.SAO", // ASAI3.SAO
+        "B3SA3.SAO", "BBAS3.SAO",  "BBDC3.SAO",  "BBDC4.SAO",
+        "BBSE3.SAO", "BEEF3.SAO",  "BPAC11.SAO", "BRAP4.SAO",
+        "BRDT3.SAO", "BRFS3.SAO",  "BRKM5.SAO",  "BRML3.SAO",
+        "BTOW3.SAO", "CCRO3.SAO",  "CESP6.SAO",  "CIEL3.SAO",
+        "CMIG4.SAO", "COGN3.SAO",  "CPFE3.SAO",  "CPLE6.SAO",
+        "CRFB3.SAO", "CSAN3.SAO",  "CSMG3.SAO",  "CSNA3.SAO",
+        "CVCB3.SAO", "CYRE3.SAO",  "DTEX3.SAO",  "ECOR3.SAO",
+        "EGIE3.SAO", "ELET3.SAO",  "ELET6.SAO",  "EMBR3.SAO",
+        "ENBR3.SAO", "ENEV3.SAO",  "ENGI11.SAO", "EQTL3.SAO",
+        "EZTC3.SAO", "FLRY3.SAO",  "GGBR4.SAO",  "GNDI3.SAO",
+        "GOAU4.SAO", "GOLL4.SAO",  "HAPV3.SAO",  "HGTX3.SAO",
+        "HYPE3.SAO", "IGTA3.SAO",  "IRBR3.SAO",  "ITSA4.SAO",
+        "ITUB4.SAO", "JBSS3.SAO",  "JHSF3.SAO",  "KLBN11.SAO",
+        "LAME3.SAO", "LAME4.SAO",  "LCAM3.SAO",  "LIGT3.SAO",
+        "LINX3.SAO", "LREN3.SAO",  "MDIA3.SAO", //"LWSA3.SAO"
+        "MEAL3.SAO", "MGLU3.SAO",  "MOVI3.SAO",  "MRFG3.SAO",
+        "MRVE3.SAO", "MULT3.SAO",  "NEOE3.SAO",  "NTCO3.SAO",
+        "PETR3.SAO", "PETR4.SAO",  "PRIO3.SAO", //"PCAR3.SAO"
+        "PSSA3.SAO", "QUAL3.SAO",  "RADL3.SAO",  "RAIL3.SAO",
+        "RAPT4.SAO", "RENT3.SAO",  "SANB11.SAO", "SAPR11.SAO",
+        "SBSP3.SAO", "SULA11.SAO", "SUZB3.SAO",  "TAEE11.SAO",
+        "TIMS3.SAO", "TOTS3.SAO",  "TRPL4.SAO",  "UGPA3.SAO",
+        "USIM5.SAO", "VALE3.SAO",  "VIVT3.SAO",  "VVAR3.SAO",
+        "WEGE3.SAO", "YDUQ3.SAO"};
     portfolio::minute_point mp_start =
         date::sys_days{2018_y / 01 / 01} + 10h + 0min;
     portfolio::minute_point mp_end =
@@ -134,16 +162,19 @@ TEST_CASE("Naive EA") {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
-    // portfolio::alphavantage_data_feed af("demo", false);
+    // portfolio::alphavantage_data_feed af("demo", true);
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
                               portfolio::timeframe::daily);
-    //    portfolio::market_data md(assets, af, mp_start, mp_end,
-    //                              portfolio::timeframe::daily);
+    //        portfolio::market_data md(assets, af, mp_start, mp_end,
+    //                                  portfolio::timeframe::weekly);
     portfolio::portfolio port(md);
     //    random_search<portfolio::market_data, portfolio::portfolio>(
     //        assets, mock_df, mp_start, mp_end, portfolio::timeframe::daily,
     //        interval, 30);
-    portfolio::naive_EA solver(port, md, interval, 40);
-    solver.run(3, 0.1);
+    //    portfolio::naive_EA solver(port, md, interval, 12);
+    //    solver.run(10, 0.1);
     // solver.run();
+    portfolio::random_search random(md, interval, 12);
+    random.run();
+    random.display();
 }

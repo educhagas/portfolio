@@ -30,13 +30,17 @@ namespace portfolio {
         portfolio crossover(const market_data &data, portfolio &rhs);
         double distance(market_data &data, portfolio &rhs,
                         double max_dist = std::numeric_limits<double>::max());
+        [[nodiscard]] bool invariants() const;
 
       private:
         void normalize_allocation();
         [[nodiscard]] double total_allocation() const;
-        [[nodiscard]] bool invariants() const;
+
         std::optional<portfolio_mad> mad_;
         std::map<std::string, double> assets_proportions_;
+        double lower_bound_;
+        double upper_bound_;
+        size_t k_;
     };
 } // namespace portfolio
 #endif // PORTFOLIO_PORTFOLIO_H

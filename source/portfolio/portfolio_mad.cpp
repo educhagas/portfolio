@@ -19,15 +19,18 @@ namespace portfolio {
             data_feed_result df = a->second;
             auto price_it = df.find_prices_from(interval_);
             if (price_it == df.end()) {
-                throw std::runtime_error(
-                    "MAD_PORTFOLIO constructor error: interval not found.");
+                throw std::runtime_error("MAD_PORTFOLIO constructor error: "
+                                         "interval not found for asset " +
+                                         a->first);
             }
             for (size_t i = 0; i < n_periods_; ++i) {
                 if (price_it != df.begin())
                     price_it--;
                 else
-                    throw std::runtime_error("MAD_PORTFOLIO constructor error: "
-                                             "n_periods out of market_data.");
+                    throw std::runtime_error(
+                        "MAD_PORTFOLIO constructor error: "
+                        "n_periods out of market_data for asset: " +
+                        a->first);
             }
             std::vector<double> asset_returns;
             for (size_t i = 0; i < n_periods_; ++i) {

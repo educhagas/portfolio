@@ -25,7 +25,7 @@ namespace portfolio {
         [[nodiscard]] bool contains(std::string_view asset) const;
         friend std::ostream &operator<<(std::ostream &os,
                                         const market_data &data);
-        size_t size();
+        [[nodiscard]] size_t size() const;
 
       private:
         std::map<std::string, portfolio::data_feed_result> assets_map_;

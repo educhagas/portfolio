@@ -25,6 +25,7 @@ namespace portfolio {
         _pareto_front = pareto::front<double, 2, portfolio>({true, false});
         // Initialize population
         _population.reserve(_population_size);
+        _best_fx = std::numeric_limits<double>::max();
         for (int i = 0; i < _population_size; ++i) {
             _population.emplace_back(_problem);
         }
@@ -66,7 +67,7 @@ namespace portfolio {
             std::cout << point << " -> " << value << std::endl;
         }
         pareto::plot_front(_pareto_front);
-        matplot::save("pareto2.jpg");
+        matplot::save("pareto2a.jpg");
     }
     void naive_EA::evolutionary_cycle(double lambda_value) {
         // display_status(lambda_value);
@@ -104,7 +105,10 @@ namespace portfolio {
                                             naive_EA::selection_strategy s) {
         switch (s) {
         case selection_strategy::uniform: {
-            static std::default_random_engine generator;
+            static std::default_random_engine generator =
+                std::default_random_engine(std::chrono::system_clock::now()
+                                               .time_since_epoch()
+                                               .count());
             std::vector<size_t> parent_position(n_of_candidates);
             std::uniform_int_distribution<size_t> pos_d(0,
                                                         population.size() - 1);
@@ -117,8 +121,9 @@ namespace portfolio {
             std::vector<size_t> parent_position(n_of_candidates);
             std::partial_sort(
                 population.begin(), population.begin() + parent_position.size(),
-                population.end(),
-                [](individual &a, individual &b) { return a.fx > b.fx; });
+                population.end(), [](const individual &a, const individual &b) {
+                    return a.fx > b.fx;
+                });
             std::iota(parent_position.begin(), parent_position.end(), 0);
             return parent_position;
         }
@@ -127,14 +132,18 @@ namespace portfolio {
     std::vector<naive_EA::individual>
     naive_EA::reproduction(std::vector<individual> &population,
                            std::vector<size_t> &parent_position) {
-        static std::default_random_engine generator;
+        static std::default_random_engine generator =
+            std::default_random_engine(
+                std::chrono::system_clock::now().time_since_epoch().count());
+
         std::uniform_real_distribution<double> r(0.0, 1.0);
         std::vector<individual> children;
         for (int j = 0; j < parent_position.size(); j += 2) {
             if (r(generator) < _crossover_probability) {
                 // Crossover
-                children.push_back(population[parent_position[j]].s.crossover(
-                    _problem, population[parent_position[j + 1]].s));
+                children.emplace_back(
+                    population[parent_position[j]].s.crossover(
+                        _problem, population[parent_position[j + 1]].s));
             } else {
                 // Mutation
                 children.push_back(population[parent_position[j]]);
@@ -153,7 +162,7 @@ namespace portfolio {
         }
         return r;
     }
-    size_t naive_EA::n_of_selection_candidates() {
+    size_t naive_EA::n_of_selection_candidates() const {
         return _population_size * _parents_per_children * _children_proportion;
     }
     void naive_EA::display_status(double lambda_value) {
@@ -161,6 +170,6 @@ namespace portfolio {
         std::cout << " - Lambda value: " << lambda_value;
         std::cout << " - Best_fx: " << this->best_fx() << std::endl;
     }
-    double naive_EA::best_fx() { return _best_fx; }
+    double naive_EA::best_fx() const { return _best_fx; }
 
 } // namespace portfolio

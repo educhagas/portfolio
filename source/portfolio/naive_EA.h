@@ -21,7 +21,7 @@ namespace portfolio {
             individual(market_data rhs) : s(rhs) {}
             std::pair<double, double> evaluate(market_data &rhs,
                                                interval_points &interval,
-                                               int &n_periods) {
+                                               const int &n_periods) {
                 return s.evaluate_mad(rhs, interval, n_periods);
             }
             portfolio s;
@@ -38,14 +38,14 @@ namespace portfolio {
 
         void run(size_t iterations, double lambda_step);
 
-        double best_fx();
+        [[nodiscard]] double best_fx() const;
 
       private:
         void evolutionary_cycle(double lambda_value);
 
         void evaluate(std::vector<individual> &population, double lambda_value);
 
-        size_t n_of_selection_candidates();
+        [[nodiscard]] size_t n_of_selection_candidates() const;
 
         std::vector<size_t> selection(std::vector<individual> &population,
                                       size_t n_of_candidates,
@@ -55,7 +55,7 @@ namespace portfolio {
         reproduction(std::vector<individual> &population,
                      std::vector<size_t> &parent_position);
 
-        std::vector<individual>
+        static std::vector<individual>
         update_population(std::vector<individual> &population,
                           std::vector<size_t> &positions);
 

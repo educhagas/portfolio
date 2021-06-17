@@ -95,7 +95,9 @@ add_library(portfolio
         portfolio/portfolio_mad.cpp
         portfolio/portfolio_mad.h
         portfolio/naive_EA.h
-        portfolio/naive_EA.cpp)
+        portfolio/naive_EA.cpp
+        portfolio/random_search.h
+        portfolio/random_search.cpp)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
