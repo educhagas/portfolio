@@ -17,12 +17,8 @@ namespace portfolio {
         explicit portfolio(const market_data &data);
         /// @brief Evaluate portfolio using MAD as risk measure.
         /// \param data Market data of assets.
-        /// \param interval Time interval for which you want to calculate MAD.
-        /// \param n_periods Number of time periods used for calculating MAD.
         /// \return Risk and expected return of the portfolio.
-        std::pair<double, double> evaluate_mad(const market_data &data,
-                                               interval_points interval,
-                                               int n_periods);
+        std::pair<double, double> evaluate_mad(const market_data &data);
         friend std::ostream &operator<<(std::ostream &os,
                                         const portfolio &portfolio1);
 

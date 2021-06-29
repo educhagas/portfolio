@@ -10,10 +10,9 @@
 #include <range/v3/core.hpp>
 #include <range/v3/numeric/accumulate.hpp>
 namespace portfolio {
-    portfolio_mad::portfolio_mad(const market_data &data,
-                                 interval_points interval, int n_periods)
-        : interval_(std::move(interval)) {
-        n_periods_ = n_periods;
+    portfolio_mad::portfolio_mad(const market_data &data) {
+        this->interval_= data.interval();
+        this->n_periods_= data.n_periods();
         for (auto a = data.assets_map_begin(); a != data.assets_map_end();
              ++a) {
             data_feed_result df = a->second;

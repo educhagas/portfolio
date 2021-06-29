@@ -8,34 +8,43 @@
 
 namespace portfolio {
 
-    random_search::random_search(market_data &m, interval_points &interval,
-                                 int n_periods)
-        : market_(m), interval_(interval), n_periods_(n_periods) {
+    random_search::random_search(market_data &m) : market_(m) {
         pareto_front_ =
             pareto::front<double, 2, portfolio>({pareto::min, pareto::max});
-        n_random_ = 100;
+        n_random_ = 1000;
     }
     void random_search::run() {
         for (size_t i = 0; i < n_random_; ++i) {
             portfolio p(market_);
             std::pair<double, double> risk_return =
-                p.evaluate_mad(market_, interval_, n_periods_);
+                p.evaluate_mad(this->market_);
             pareto_front_.insert(
                 std::make_pair(pareto::front<double, 2, portfolio>::key_type(
                                    {risk_return.first, risk_return.second}),
                                p));
         }
     }
-    void random_search::display() {
-        for (const auto &[point, value] : pareto_front_) {
-            std::cout << point << " -> " << value << std::endl;
+    std::ostream &operator<<(std::ostream &os, const random_search &search) {
+        for (const auto &[point, value] : search.pareto_front_) {
+            os << point << " -> " << value << "\n";
         }
-        pareto::plot_front(pareto_front_);
+        return os;
+    }
+    void random_search::plot() {
+        auto now = std::chrono::system_clock::now();
+        std::string str_now = date::format("%Y_%m_%d_%H_%M", now);
         std::string file_name;
         file_name.append("pareto_");
         file_name.append(std::to_string(n_random_));
+        file_name.append("_");
+        file_name.append(str_now);
         file_name.append(".jpg");
         std::cout << file_name << std::endl;
+        pareto::plot_front(pareto_front_);
         matplot::save(file_name);
+    }
+    void random_search::run(size_t n_random) {
+        this->n_random_ = n_random;
+        this->run();
     }
 } // namespace portfolio

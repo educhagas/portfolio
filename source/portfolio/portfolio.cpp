@@ -108,17 +108,15 @@ namespace portfolio {
             });
         return total;
     }
-    std::pair<double, double> portfolio::evaluate_mad(const market_data &data,
-                                                      interval_points interval,
-                                                      int n_periods) {
+    std::pair<double, double> portfolio::evaluate_mad(const market_data &data) {
         if (mad_) {
-            if (mad_->n_periods() != n_periods ||
-                mad_->interval() != interval) {
+            if (mad_->n_periods() != data.n_periods() ||
+                mad_->interval() != data.interval()) {
                 mad_.reset();
-                mad_.emplace(data, interval, n_periods);
+                mad_.emplace(data);
             }
         } else {
-            mad_.emplace(data, interval, n_periods);
+            mad_.emplace(data);
         }
         double total_risk = 0.0;
         double total_return = 0.0;
