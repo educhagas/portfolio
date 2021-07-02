@@ -16,8 +16,14 @@ namespace portfolio {
         // Auxiliary class for individuals
         class individual : public portfolio {
           public:
+            /// Initialize a new portfolio making a copy of the portfolio
+            /// received as a parameter. \param rhs portfolio used to copy.
             individual(portfolio &rhs) : portfolio(rhs) {}
+            /// Initialize a new random portfolio using market_data.
+            /// \param rhs market_data used to initialize a portfolio.
             individual(market_data &rhs) : portfolio(rhs) {}
+            /// Initialize a new portfolio making a copy of the portfolio
+            /// received as a parameter. \param rhs portfolio used to copy.
             individual(portfolio rhs) : portfolio(rhs) {}
             void mutation(market_data &market, double mutation_strength);
             individual crossover(market_data &p, individual &rhs);
@@ -161,7 +167,7 @@ namespace portfolio {
       private /* methods */:
         // main cycle
         // void evolutionary_cycle();
-        void evolutionary_cycle(double lambda_value);
+        void evolutionary_cycle();
 
         // helpers
         size_t n_of_selection_candidates();
@@ -170,7 +176,7 @@ namespace portfolio {
 
         // evaluation algorithms
         // void evaluate(population_type &population);
-        void evaluate(population_type &population, double lambda_value);
+        void evaluate(population_type &population);
 
         // scaling algorithms
         void scaling(population_type &population, scaling_strategy s);
@@ -295,13 +301,15 @@ namespace portfolio {
         // portfolio best_portfolio_;
         // std::pair<double, double> best_risk_return_;
         double lambda_step_;
+        double lambda_value_;
         pareto::front<double, 2, portfolio> pareto_front_;
         void display_status(double lambda_value);
 
       public:
         friend std::ostream &
         operator<<(std::ostream &os, const evolutionary_algorithm &algorithm);
-
+        double lambda_value() const;
+        void lambda_value(double value);
         void plot();
     };
 

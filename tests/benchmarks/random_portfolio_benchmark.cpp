@@ -57,9 +57,9 @@ void generate_random_portfolio(benchmark::State &state) {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
-    // portfolio::alphavantage_data_feed af("demo", false);
+    // portfolio::alphavantage_data_feed af("demo", true);
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
-                              portfolio::timeframe::daily, interval, 12);
+                              portfolio::timeframe::weekly, interval, 12);
     //    portfolio::market_data md(assets, af, mp_start, mp_end,
     //                              portfolio::timeframe::weekly, interval, 12);
     portfolio::portfolio port(md);

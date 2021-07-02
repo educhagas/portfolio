@@ -17,6 +17,7 @@ namespace portfolio {
         this->algorithm(algorithm::DEFAULT);
         pareto_front_ =
             pareto::front<double, 2, portfolio>({pareto::min, pareto::max});
+        this->lambda_value_ = 0.0;
         this->comp_ = [](individual_ptr &a, individual_ptr &b) {
             return a->fx < b->fx;
         };
@@ -32,11 +33,10 @@ namespace portfolio {
     }
     void evolutionary_algorithm::run() {
         initialize_population();
-        double lambda_value = 0.0;
-        while (lambda_value < 1.0) {
+        while (lambda_value_ < 1.0) {
             best_solutions_.clear();
             for (int i = 0; i < this->max_generations_; ++i) {
-                evolutionary_cycle(lambda_value);
+                evolutionary_cycle();
             }
             for (auto &solution : best_solutions_) {
                 pareto_front_.insert(std::make_pair(
@@ -44,7 +44,7 @@ namespace portfolio {
                         {solution->risk, solution->expected_return}),
                     *solution));
             }
-            lambda_value += lambda_step_;
+            this->lambda_value_ += lambda_step_;
         }
     }
     void evolutionary_algorithm::run(size_t iterations) {
@@ -52,14 +52,14 @@ namespace portfolio {
         double lambda_value = 0.0;
         while (lambda_value <= 1.0) {
             for (int i = 0; i < iterations; ++i) {
-                evolutionary_cycle(lambda_value);
+                evolutionary_cycle();
             }
-            lambda_value += this->lambda_step_;
+            this->lambda_value_ += this->lambda_step_;
         }
     }
-    void evolutionary_algorithm::evolutionary_cycle(double lambda_value) {
+    void evolutionary_algorithm::evolutionary_cycle() {
         // display_status(lambda_value);
-        evaluate(population_, lambda_value);
+        evaluate(population_);
         scaling(this->population_, this->reproduction_scaling_strategy_);
         fitness_sharing(this->population_);
         population_type parents =
@@ -67,7 +67,7 @@ namespace portfolio {
                       this->reproduction_selection_strategy_);
         population_type children = reproduction(parents);
 
-        evaluate(children, lambda_value);
+        evaluate(children);
 
         const size_t size_of_elite_set = this->size_of_elite_set();
         population_type parents_and_children =
@@ -86,14 +86,13 @@ namespace portfolio {
                                              size_of_elite_set);
         migration_step();
     }
-    void evolutionary_algorithm::evaluate(population_type &population,
-                                          double lambda_value) {
+    void evolutionary_algorithm::evaluate(population_type &population) {
         for (individual_ptr &item : population) {
             auto risk_return = item->evaluate_mad(this->problem_);
             item->risk = risk_return.first;
             item->expected_return = risk_return.second;
-            item->fx = (lambda_value * item->risk) -
-                       ((1.0 - lambda_value) * item->expected_return);
+            item->fx = (this->lambda_value_ * item->risk) -
+                       ((1.0 - this->lambda_value_) * item->expected_return);
             this->try_to_update_best(item);
         }
         //        for (individual_ptr &item : population) {
@@ -926,6 +925,12 @@ namespace portfolio {
                 }
             }
         }
+    }
+    double evolutionary_algorithm::lambda_value() const {
+        return lambda_value_;
+    }
+    void evolutionary_algorithm::lambda_value(double value) {
+        lambda_value_ = value;
     }
 
     void
