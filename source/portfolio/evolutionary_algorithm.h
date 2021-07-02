@@ -307,6 +307,7 @@ namespace portfolio {
 
       public:
         pareto::front<double, 2, portfolio> &pareto_front();
+
         friend std::ostream &
         operator<<(std::ostream &os, const evolutionary_algorithm &algorithm);
         double lambda_value() const;
