@@ -19,6 +19,12 @@ namespace portfolio {
     /// \return True if is in floating-point format or false otherwise.
     bool is_floating(std::string_view str_view);
 
+    /// Conversion from char* to int
+    /// \param b start position
+    /// \param e end position
+    /// \return int converted from char*
+    int parse_int(const char *b, const char *e);
+
     /// \brief Conversion from std::string to minute_point.
     /// \param str_mp std::string to be converted. To work correctly, a string
     /// in the format "%Y-%m-%d_%H-%M" must be used. \return minute_point

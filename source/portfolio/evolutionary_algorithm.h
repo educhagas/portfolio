@@ -35,6 +35,10 @@ namespace portfolio {
             double fx;
             double fitness;
 
+            std::pair<double, double> risk_return;
+            unsigned rank;
+            double crowding_distance;
+
           private:
             void reflect(double &v, double lb, double ub);
         };
@@ -51,8 +55,11 @@ namespace portfolio {
             roulette,      // selection probability proportional to fitness
             sus,           // stochastic probability proportional to fitness
             overselection, // 80% of operations on the x% best solutions
-            roundrobin_tournament // each individual evaluated against other q
-                                  // individuals
+            roundrobin_tournament, // each individual evaluated against other q
+                                   // individuals
+            nsga2_tournament, // select using rank by pareto front and crowding
+                              // distance
+            nsga2_truncate
         };
 
         // how fitness is determined from the objective functions
@@ -89,7 +96,8 @@ namespace portfolio {
         enum class algorithm {
             DEFAULT, // Default configuration
             GA,      // Genetic Algorithm
-            EE       // Evolutionary Strategy
+            EE,      // Evolutionary Strategy
+            NSGA2    // NSGA2
         };
 
       public:
@@ -205,6 +213,9 @@ namespace portfolio {
         population_type tournament_selection(population_type &population,
                                              size_t n_of_candidates);
 
+        population_type nsga2_tournament_selection(population_type &population,
+                                                   size_t n_of_candidates);
+
         population_type roulette_selection(population_type &population,
                                            size_t n_of_candidates);
 
@@ -216,6 +227,9 @@ namespace portfolio {
 
         population_type roundrobin_selection(population_type &population,
                                              size_t n_of_candidates);
+
+        population_type nsga2_truncate_selection(population_type &population,
+                                                 size_t n_of_candidates);
 
         // reproduction algorithms
         population_type reproduction(population_type &parents);
@@ -313,6 +327,11 @@ namespace portfolio {
         double lambda_value() const;
         void lambda_value(double value);
         void plot();
+        void new_evaluate();
+        void nsga2_evaluate(population_type &population);
+        void nsga2_run();
+        void nsga2_evolutionary_cycle();
+        void save_to_json(std::string filename);
     };
 
 } // namespace portfolio

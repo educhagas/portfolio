@@ -177,9 +177,12 @@ namespace portfolio {
         std::sample(assets_total.begin(), assets_total.end(),
                     std::back_inserter(chosen_assets), k_,
                     std::mt19937{std::random_device{}()});
+        std::uniform_real_distribution<double> d(0., 1.);
+        double alpha = d(generator);
         for (auto &a : chosen_assets) {
             child.assets_proportions_[a] =
-                this->assets_proportions_.at(a) + rhs.assets_proportions_.at(a);
+                alpha * this->assets_proportions_.at(a) +
+                (1 - alpha) * rhs.assets_proportions_.at(a);
         }
         child.normalize_allocation();
         return child;

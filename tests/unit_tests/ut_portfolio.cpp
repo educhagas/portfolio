@@ -62,7 +62,6 @@ TEST_CASE("Portfolio and Market Data") {
 TEST_CASE("Evolulionary algorithm") {
     using namespace date::literals;
     using namespace std::chrono_literals;
-
     std::vector<std::string> assets = {
         "ABEV3.SAO", "ALPA4.SAO",  "ALSO3.SAO",  "AMAR3.SAO",
         "AZUL4.SAO", // ASAI3.SAO
@@ -100,20 +99,18 @@ TEST_CASE("Evolulionary algorithm") {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
-    //    portfolio::alphavantage_data_feed af("demo", false);
+    // portfolio::alphavantage_data_feed af("demo", false);
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
                               portfolio::timeframe::weekly, interval, 12);
     //    portfolio::market_data md(assets, af, mp_start, mp_end,
-    //                              portfolio::timeframe::weekly,interval,12);
+    //                                  portfolio::timeframe::weekly,interval,12);
     portfolio::portfolio port(md);
     portfolio::evolutionary_algorithm solver(md);
-    solver.max_generations(10);
-    solver.population_size(50);
-    solver.run();
-    std::cout << solver << std::endl;
+    solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
+    solver.population_size(300);
+    solver.max_generations(100);
+    solver.nsga2_run();
     solver.plot();
-    //    portfolio::random_search random(md);
-    //    random.run();
-    //    std::cout<<random<<std::endl;
-    //    random.plot();
+    std::string a = "save.json";
+    solver.save_to_json(a);
 }

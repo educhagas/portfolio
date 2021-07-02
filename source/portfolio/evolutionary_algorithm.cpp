@@ -3,12 +3,14 @@
 //
 
 #include "evolutionary_algorithm.h"
+#include "portfolio/common/algorithm.h"
 #include <iostream>
+#include <map>
 #include <matplot/matplot.h>
+#include <nlohmann/json.hpp>
 #include <numeric>
 #include <pareto/matplot/front.h>
 #include <random>
-
 namespace portfolio {
 
     evolutionary_algorithm::evolutionary_algorithm(market_data &m)
@@ -31,22 +33,7 @@ namespace portfolio {
             return a->fitness < b->fitness;
         };
     }
-    void evolutionary_algorithm::run() {
-        initialize_population();
-        while (lambda_value_ < 1.0) {
-            best_solutions_.clear();
-            for (int i = 0; i < this->max_generations_; ++i) {
-                evolutionary_cycle();
-            }
-            for (auto &solution : best_solutions_) {
-                pareto_front_.insert(std::make_pair(
-                    pareto::front<double, 2, portfolio>::key_type(
-                        {solution->risk, solution->expected_return}),
-                    *solution));
-            }
-            this->lambda_value_ += lambda_step_;
-        }
-    }
+    void evolutionary_algorithm::run() {}
     void evolutionary_algorithm::run(size_t iterations) {
         initialize_population();
         double lambda_value = 0.0;
@@ -95,25 +82,6 @@ namespace portfolio {
                        ((1.0 - this->lambda_value_) * item->expected_return);
             this->try_to_update_best(item);
         }
-        //        for (individual_ptr &item : population) {
-        //            // item.fx = item.evaluate(problem_,
-        //            interval_,n_periods_); std::pair<double, double>
-        //            risk_return =
-        //                item.evaluate(problem_);
-        //            item->risk = risk_return.first;
-        //            item->expected_return = risk_return.second;
-        //            item->fx = (lambda_value * item.risk) -
-        //                      ((1.0 - lambda_value) * item->expected_return);
-        //            if (item->fx < best_fx_) {
-        //                pareto_front_.insert(std::make_pair(
-        //                    pareto::front<double, 2, portfolio>::key_type(
-        //                        {item->risk, item->expected_return}),
-        //                    item->s));
-        //                best_risk_return_ =
-        //                    std::make_pair(item->risk, item->expected_return);
-        //                best_fx_ = item->fx;
-        //            }
-        //        }
     }
     evolutionary_algorithm::population_type evolutionary_algorithm::selection(
         population_type &population, size_t n_of_candidates,
@@ -153,6 +121,13 @@ namespace portfolio {
                 island_result =
                     roundrobin_selection(island, n_of_candidates_per_island);
                 break;
+            case selection_strategy::nsga2_tournament:
+                island_result = nsga2_tournament_selection(
+                    island, n_of_candidates_per_island);
+                break;
+            case selection_strategy::nsga2_truncate:
+                island_result = nsga2_truncate_selection(
+                    island, n_of_candidates_per_island);
             }
             result.insert(result.end(), island_result.begin(),
                           island_result.end());
@@ -214,7 +189,7 @@ namespace portfolio {
         file_name.append("_");
         file_name.append(str_now);
         file_name.append(".jpg");
-        std::cout << file_name << std::endl;
+        // std::cout << file_name << std::endl;
         pareto::plot_front(pareto_front_);
         matplot::save(file_name);
     }
@@ -276,6 +251,23 @@ namespace portfolio {
                 selection_strategy::uniform;
             this->survival_scaling_strategy_ = scaling_strategy::window;
             this->survival_selection_strategy_ = selection_strategy::truncate;
+            break;
+        }
+        case algorithm::NSGA2: {
+            this->population_size_ = 300;
+            this->number_of_islands_ = 1;
+            this->fitness_sharing_niche_size_ = 0.0;
+            this->children_proportion_ = 1.0;
+            this->crossover_probability_ = 0.1;
+            this->mutation_strength_ = 1 / this->problem_.size();
+            this->competition_between_parents_and_children_ = false;
+            this->elitism_proportion_ = 1.0;
+            this->reproduction_scaling_strategy_ = scaling_strategy::window;
+            this->reproduction_selection_strategy_ =
+                selection_strategy::nsga2_tournament;
+            this->survival_scaling_strategy_ = scaling_strategy::window;
+            this->survival_selection_strategy_ =
+                selection_strategy::nsga2_truncate;
             break;
         }
         }
@@ -935,6 +927,314 @@ namespace portfolio {
     pareto::front<double, 2, portfolio> &
     evolutionary_algorithm::pareto_front() {
         return this->pareto_front_;
+    }
+    void evolutionary_algorithm::new_evaluate() {
+        initialize_population();
+        std::vector<double> x;
+        std::vector<double> y;
+        std::vector<unsigned> in(this->population_size());
+        std::iota(in.begin(), in.end(), 0);
+        std::vector<bool> dominated(this->population_.size(), false);
+        for (individual_ptr &item : this->population_) {
+            item->risk_return = item->evaluate_mad(this->problem_);
+            item->crowding_distance = 0.0;
+            item->risk = item->risk_return.first;
+            item->expected_return = item->risk_return.second;
+            x.push_back(item->risk_return.first);
+            y.push_back(item->risk_return.second);
+        }
+        std::sort(this->population_.begin(), this->population_.end(),
+                  [](const individual_ptr &left, individual_ptr &right) {
+                      if (left->risk_return.first < right->risk_return.first) {
+                          return true;
+                      }
+                      if (left->risk_return.first > right->risk_return.first) {
+                          return false;
+                      }
+                      if (left->risk_return.second >
+                          right->risk_return.second) {
+                          return true;
+                      } else {
+                          return false;
+                      }
+                  });
+
+        unsigned ind = 1;
+        while (!in.empty()) {
+            for (auto &i : in) {
+                dominated[i] = false;
+            }
+            bool decision = true;
+            double z;
+            for (size_t i = 0; i < in.size() - 1; ++i) {
+                if (decision) {
+                    z = population_[in[i]]->risk_return.second;
+                }
+                if (population_[in[i + 1]]->risk_return.second > z) {
+                    decision = true;
+                } else {
+                    dominated[in[i + 1]] = true;
+                    decision = false;
+                }
+            }
+            std::vector<unsigned> ranked;
+            for (auto &i : in) {
+                if (!dominated[i]) {
+                    population_[i]->rank = ind;
+                    ranked.push_back(i);
+                }
+            }
+            // calculate crowding distance
+            if (ranked.size() == 1) {
+                this->population_[ranked[0]]->crowding_distance =
+                    std::numeric_limits<double>::max();
+            } else if (ranked.size() == 2) {
+                this->population_[ranked[0]]->crowding_distance =
+                    std::numeric_limits<double>::max();
+                this->population_[ranked[1]]->crowding_distance =
+                    std::numeric_limits<double>::max();
+            } else {
+                double f_min =
+                    this->population_[*ranked.begin()]->risk_return.second;
+                double f_max =
+                    this->population_[*ranked.rbegin()]->risk_return.second;
+                this->population_[*ranked.begin()]->crowding_distance =
+                    std::numeric_limits<double>::max();
+                this->population_[*ranked.rbegin()]->crowding_distance =
+                    std::numeric_limits<double>::max();
+                for (size_t i = 1; i < ranked.size() - 1; ++i) {
+                    this->population_[ranked[i]]->crowding_distance +=
+                        (this->population_[ranked[i + 1]]->risk_return.second -
+                         this->population_[ranked[i - 1]]->risk_return.second) /
+                        (f_max - f_min);
+                }
+            }
+            std::vector<unsigned> diff;
+            std::set_difference(in.begin(), in.end(), ranked.begin(),
+                                ranked.end(),
+                                std::inserter(diff, diff.begin()));
+            in = std::move(diff);
+            ind++;
+        }
+
+        auto p1 = matplot::scatter(x, y);
+        p1->color({1.f, 0.f, 0.f});
+        p1->marker_face_color({1.f, 0.f, 0.f});
+        matplot::save("points.jpg");
+    }
+    void evolutionary_algorithm::nsga2_run() {
+        initialize_population();
+        for (int i = 0; i < this->max_generations_; ++i) {
+            nsga2_evolutionary_cycle();
+        }
+        for (individual_ptr &item : this->population_) {
+            if (item->rank == 1) {
+                pareto_front_.insert(std::make_pair(
+                    pareto::front<double, 2, portfolio>::key_type(
+                        {item->risk_return.first, item->risk_return.second}),
+                    *item));
+            }
+        }
+    }
+    void evolutionary_algorithm::nsga2_evolutionary_cycle() {
+        nsga2_evaluate(this->population_);
+
+        //        scaling(this->population_,
+        //        this->reproduction_scaling_strategy_);
+        //        fitness_sharing(this->population_);
+        population_type parents =
+            selection(this->population_, n_of_selection_candidates(),
+                      this->reproduction_selection_strategy_);
+
+        population_type children = reproduction(parents);
+
+        const size_t size_of_elite_set = this->size_of_elite_set();
+        population_type parents_and_children =
+            this->merge(this->population_, children);
+
+        nsga2_evaluate(parents_and_children);
+
+        this->population_ =
+            selection(parents_and_children, this->population_size_,
+                      this->survival_selection_strategy_);
+        //        this->population_ = insert_elite_set(survivors,
+        //        parents_and_children,
+        //                                             size_of_elite_set);
+        //        int b = this->population_.size();
+        // migration_step();
+    }
+    void evolutionary_algorithm::nsga2_evaluate(
+        evolutionary_algorithm::population_type &population) {
+        std::vector<unsigned> not_ranked(population.size());
+        std::iota(not_ranked.begin(), not_ranked.end(), 0);
+        std::vector<bool> dominated(population.size(), false);
+        for (individual_ptr &item : population) {
+            item->risk_return = item->evaluate_mad(this->problem_);
+            item->crowding_distance = 0.0;
+        }
+        std::sort(population.begin(), population.end(),
+                  [](const individual_ptr &left, individual_ptr &right) {
+                      if (left->risk_return.first < right->risk_return.first) {
+                          return true;
+                      }
+                      if (left->risk_return.first > right->risk_return.first) {
+                          return false;
+                      }
+                      if (left->risk_return.second >
+                          right->risk_return.second) {
+                          return true;
+                      } else {
+                          return false;
+                      }
+                  });
+        unsigned ind = 1;
+        while (!not_ranked.empty()) {
+            for (auto &i : not_ranked) {
+                dominated[i] = false;
+            }
+            bool decision = true;
+            double z;
+            for (size_t i = 0; i < not_ranked.size() - 1; ++i) {
+                if (decision) {
+                    z = population[not_ranked[i]]->risk_return.second;
+                }
+                if (population[not_ranked[i + 1]]->risk_return.second > z) {
+                    decision = true;
+                } else {
+                    dominated[not_ranked[i + 1]] = true;
+                    decision = false;
+                }
+            }
+            std::vector<unsigned> ranked;
+            for (auto &i : not_ranked) {
+                if (!dominated[i]) {
+                    population[i]->rank = ind;
+                    ranked.push_back(i);
+                }
+            }
+            // calculate crowding distance
+            if (ranked.size() == 1) {
+                population[ranked[0]]->crowding_distance =
+                    std::numeric_limits<double>::max();
+            } else if (ranked.size() == 2) {
+                population[ranked[0]]->crowding_distance =
+                    std::numeric_limits<double>::max();
+                population[ranked[1]]->crowding_distance =
+                    std::numeric_limits<double>::max();
+            } else {
+                double f_min = population[*ranked.begin()]->risk_return.second;
+                double f_max = population[*ranked.rbegin()]->risk_return.second;
+                population[*ranked.begin()]->crowding_distance =
+                    std::numeric_limits<double>::max();
+                population[*ranked.rbegin()]->crowding_distance =
+                    std::numeric_limits<double>::max();
+                for (size_t i = 1; i < ranked.size() - 1; ++i) {
+                    population[ranked[i]]->crowding_distance +=
+                        (population[ranked[i + 1]]->risk_return.second -
+                         population[ranked[i - 1]]->risk_return.second) /
+                        (f_max - f_min);
+                }
+            }
+            std::vector<unsigned> diff;
+            std::set_difference(not_ranked.begin(), not_ranked.end(),
+                                ranked.begin(), ranked.end(),
+                                std::inserter(diff, diff.begin()));
+            not_ranked = std::move(diff);
+            ind++;
+        }
+    }
+    evolutionary_algorithm::population_type
+    evolutionary_algorithm::nsga2_tournament_selection(
+        evolutionary_algorithm::population_type &population,
+        size_t n_of_candidates) {
+        static std::default_random_engine generator =
+            std::default_random_engine(
+                std::chrono::system_clock::now().time_since_epoch().count());
+        population_type parents;
+        std::uniform_int_distribution<size_t> pos_d(0, population.size() - 1);
+        for (int i = 0; i < n_of_candidates; ++i) {
+            size_t position = pos_d(generator);
+            for (int j = 1; j < this->tournament_size_; ++j) {
+                size_t position2 = pos_d(generator);
+                if (population[position2]->rank < population[position]->rank) {
+                    position = position2;
+                } else if (population[position2]->rank ==
+                           population[position]->rank) {
+                    if (population[position2]->crowding_distance >
+                        population[position]->crowding_distance) {
+                        position = position2;
+                    }
+                }
+            }
+            parents.push_back(population[position]);
+        }
+        return parents;
+    }
+    evolutionary_algorithm::population_type
+    evolutionary_algorithm::nsga2_truncate_selection(
+        evolutionary_algorithm::population_type &population,
+        size_t n_of_candidates) {
+        static std::default_random_engine generator =
+            std::default_random_engine(
+                std::chrono::system_clock::now().time_since_epoch().count());
+        population_type parents;
+        parents.reserve(n_of_candidates);
+        //        std::partial_sort(population.begin(),
+        //                          population.begin() +
+        //                          std::min(n_of_candidates,
+        //                          population.size()), population.end(),
+        //                          [](const individual_ptr &left,
+        //                          individual_ptr &right) {
+        //                              if (left->rank < right->rank){
+        //                                  return true;
+        //                              }else if(left->rank == right->rank){
+        //                                  return left->crowding_distance >
+        //                                  right->crowding_distance;
+        //                              }else{
+        //                                  return false;
+        //                              }});
+        std::sort(population.begin(), population.end(),
+                  [](const individual_ptr &left, individual_ptr &right) {
+                      if (left->rank < right->rank) {
+                          return true;
+                      }
+                      if (left->rank > right->rank) {
+                          return false;
+                      }
+                      if (left->crowding_distance > right->crowding_distance) {
+                          return true;
+                      } else {
+                          return false;
+                      }
+                  });
+        std::copy(population.begin(),
+                  population.begin() +
+                      std::min(n_of_candidates, population.size()),
+                  std::back_inserter(parents));
+        int i = 0;
+        while (parents.size() < n_of_candidates) {
+            parents.push_back(parents[i % population.size()]);
+            i++;
+        }
+        std::shuffle(parents.begin(), parents.end(), generator);
+        return parents;
+    }
+    void evolutionary_algorithm::save_to_json(std::string filename) {
+        std::map<int, std::pair<double, double>> to_save;
+        int c = 1;
+        double h = this->pareto_front_.hypervolume();
+        double s = this->pareto_front_.average_distance();
+        to_save.emplace(std::make_pair(0, std::make_pair(h, s)));
+        for (individual_ptr i : this->population_) {
+            if (i->rank == 1) {
+                to_save.emplace(std::make_pair(c, i->risk_return));
+                c++;
+            }
+        }
+        nlohmann::json j_to_save(to_save);
+        std::ofstream fout(filename);
+        fout << j_to_save.dump();
+        fout.close();
     }
 
     void
