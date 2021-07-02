@@ -107,8 +107,8 @@ TEST_CASE("Evolulionary algorithm") {
     //                              portfolio::timeframe::weekly,interval,12);
     portfolio::portfolio port(md);
     portfolio::evolutionary_algorithm solver(md);
-    solver.max_generations(10);
-    solver.population_size(50);
+    solver.max_generations(5);
+    solver.population_size(10);
     solver.run();
     std::cout << solver << std::endl;
     solver.plot();
