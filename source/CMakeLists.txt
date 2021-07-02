@@ -112,6 +112,6 @@ target_include_directories(portfolio
 
 
 target_link_libraries(portfolio PUBLIC Threads::Threads range-v3 date::date nlohmann_json::nlohmann_json cpr::cpr
-        pareto matplot)
+        pareto Matplot++::matplot)
 target_pedantic_options(portfolio)
 target_exception_options(portfolio)
