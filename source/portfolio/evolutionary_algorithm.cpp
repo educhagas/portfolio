@@ -1179,20 +1179,6 @@ namespace portfolio {
                 std::chrono::system_clock::now().time_since_epoch().count());
         population_type parents;
         parents.reserve(n_of_candidates);
-        //        std::partial_sort(population.begin(),
-        //                          population.begin() +
-        //                          std::min(n_of_candidates,
-        //                          population.size()), population.end(),
-        //                          [](const individual_ptr &left,
-        //                          individual_ptr &right) {
-        //                              if (left->rank < right->rank){
-        //                                  return true;
-        //                              }else if(left->rank == right->rank){
-        //                                  return left->crowding_distance >
-        //                                  right->crowding_distance;
-        //                              }else{
-        //                                  return false;
-        //                              }});
         std::sort(population.begin(), population.end(),
                   [](const individual_ptr &left, individual_ptr &right) {
                       if (left->rank < right->rank) {
