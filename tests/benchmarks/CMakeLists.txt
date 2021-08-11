@@ -17,7 +17,7 @@ CPMAddPackage(
 
 if (benchmark_ADDED)
     # patch google benchmark target
-    set_target_properties(benchmark PROPERTIES CXX_STANDARD 17)
+    set_target_properties(benchmark PROPERTIES CXX_STANDARD 20)
     target_compile_definitions(benchmark PUBLIC -DNDEBUG)
 endif()
 
