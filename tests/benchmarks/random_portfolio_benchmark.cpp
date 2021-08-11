@@ -8,17 +8,8 @@
 #include "portfolio/portfolio.h"
 #include "portfolio/random_search.h"
 #include <algorithm>
-#include <date/date.h>
-#include <iostream>
 #include <random>
 #include <vector>
-
-void create_vector(benchmark::State &state) {
-    for (auto _ : state) {
-        std::vector<double> v(state.range(0));
-        benchmark::DoNotOptimize(v);
-    }
-}
 
 void generate_random_portfolio(benchmark::State &state) {
     using namespace date::literals;
@@ -73,7 +64,6 @@ void generate_random_portfolio(benchmark::State &state) {
     }
 }
 
-// BENCHMARK(create_vector)->Range(2,2000);
 BENCHMARK(generate_random_portfolio)->Range(2, 2000);
 
 BENCHMARK_MAIN();
