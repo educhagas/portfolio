@@ -61,7 +61,7 @@ static void generate_portfolio_nsga2(benchmark::State &state) {
     state.ResumeTiming();
     for (auto _ : state) {
         solver.max_generations(state.range(0));
-        solver.nsga2_run();
+        solver.run();
     }
 }
 

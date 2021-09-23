@@ -308,8 +308,8 @@ namespace portfolio {
         operator<<(std::ostream &os, const evolutionary_algorithm &algorithm);
 
         void nsga2_evaluate(population_type &population);
-        void nsga2_run();
-        void nsga2_run(size_t generations);
+        void run();
+        void run(size_t generations);
         void nsga2_evolutionary_cycle();
     };
 

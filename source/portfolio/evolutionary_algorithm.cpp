@@ -837,7 +837,7 @@ namespace portfolio {
             }
         }
     }
-    void evolutionary_algorithm::nsga2_run() {
+    void evolutionary_algorithm::run() {
         initialize_population();
         for (int i = 0; i < this->max_generations_; ++i) {
             nsga2_evolutionary_cycle();
@@ -1020,7 +1020,7 @@ namespace portfolio {
     evolutionary_algorithm::pareto_front() const {
         return this->pareto_front_;
     }
-    void evolutionary_algorithm::nsga2_run(size_t generations) {
+    void evolutionary_algorithm::run(size_t generations) {
         this->max_generations_ = generations;
         if (this->population_.size() != this->population_size_) {
             initialize_population();

@@ -52,6 +52,6 @@ int main() {
     solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
     solver.population_size(300);
     solver.max_generations(100);
-    solver.nsga2_run();
+    solver.run();
     portfolio::save_plot(solver.pareto_front(), "plot.jpg");
 }
