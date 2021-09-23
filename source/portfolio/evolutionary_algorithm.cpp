@@ -203,22 +203,6 @@ namespace portfolio {
         }
         }
     }
-    evolutionary_algorithm::individual_ptr
-    evolutionary_algorithm::best_solution() {
-        if (!this->best_solutions_.empty()) {
-            return this->best_solutions_[0];
-        } else {
-            return nullptr;
-        }
-    }
-    typename evolutionary_algorithm::population_type::iterator
-    evolutionary_algorithm::best_solutions_begin() {
-        return this->best_solutions_.begin();
-    }
-    typename evolutionary_algorithm::population_type::iterator
-    evolutionary_algorithm::best_solutions_end() {
-        return this->best_solutions_.end();
-    }
     size_t evolutionary_algorithm::population_size() const {
         return this->population_size_;
     }

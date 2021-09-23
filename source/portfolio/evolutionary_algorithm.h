@@ -107,12 +107,6 @@ namespace portfolio {
 
         [[nodiscard]] double best_fx() const;
 
-        individual_ptr best_solution();
-
-        typename population_type::iterator best_solutions_begin();
-
-        typename population_type::iterator best_solutions_end();
-
         // Setters and getters
         // Population management
         size_t population_size() const;
