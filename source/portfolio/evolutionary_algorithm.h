@@ -181,7 +181,7 @@ namespace portfolio {
 
         void window_scaling(population_type &population);
 
-        void sigma_scaling(population_type &population) const const;
+        void sigma_scaling(population_type &population) const;
 
         void linear_rank_scaling(population_type &population);
 
