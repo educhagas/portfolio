@@ -5,21 +5,18 @@
 #include "evolutionary_algorithm.h"
 #include "portfolio/common/algorithm.h"
 #include <iostream>
-#include <map>
 #include <matplot/matplot.h>
 #include <nlohmann/json.hpp>
 #include <numeric>
-#include <pareto/matplot/front.h>
 #include <random>
 namespace portfolio {
 
     evolutionary_algorithm::evolutionary_algorithm(market_data &m)
         : problem_(m), mutation_strength_(1.0 / this->problem_.size()),
-          lambda_step_(0.2), fitness_sharing_niche_size_(0.05 * m.size()) {
+          fitness_sharing_niche_size_(0.05 * m.size()) {
         this->algorithm(algorithm::DEFAULT);
         pareto_front_ =
             pareto::front<double, 2, portfolio>({pareto::min, pareto::max});
-        this->lambda_value_ = 0.0;
         this->comp_ = [](individual_ptr &a, individual_ptr &b) {
             return a->fx < b->fx;
         };
@@ -33,56 +30,7 @@ namespace portfolio {
             return a->fitness < b->fitness;
         };
     }
-    void evolutionary_algorithm::run() {}
-    void evolutionary_algorithm::run(size_t iterations) {
-        initialize_population();
-        double lambda_value = 0.0;
-        while (lambda_value <= 1.0) {
-            for (int i = 0; i < iterations; ++i) {
-                evolutionary_cycle();
-            }
-            this->lambda_value_ += this->lambda_step_;
-        }
-    }
-    void evolutionary_algorithm::evolutionary_cycle() {
-        // display_status(lambda_value);
-        evaluate(population_);
-        scaling(this->population_, this->reproduction_scaling_strategy_);
-        fitness_sharing(this->population_);
-        population_type parents =
-            selection(this->population_, n_of_selection_candidates(),
-                      this->reproduction_selection_strategy_);
-        population_type children = reproduction(parents);
 
-        evaluate(children);
-
-        const size_t size_of_elite_set = this->size_of_elite_set();
-        population_type parents_and_children =
-            this->merge(this->population_, children);
-        population_type next_population_candidates =
-            (this->competition_between_parents_and_children_ ||
-             this->children_proportion_ < 1.0)
-                ? parents_and_children
-                : children;
-        scaling(next_population_candidates, this->survival_scaling_strategy_);
-        population_type survivors =
-            selection(next_population_candidates,
-                      this->population_size_ - size_of_elite_set,
-                      this->survival_selection_strategy_);
-        this->population_ = insert_elite_set(survivors, parents_and_children,
-                                             size_of_elite_set);
-        migration_step();
-    }
-    void evolutionary_algorithm::evaluate(population_type &population) {
-        for (individual_ptr &item : population) {
-            auto risk_return = item->evaluate_mad(this->problem_);
-            item->risk = risk_return.first;
-            item->expected_return = risk_return.second;
-            item->fx = (this->lambda_value_ * item->risk) -
-                       ((1.0 - this->lambda_value_) * item->expected_return);
-            this->try_to_update_best(item);
-        }
-    }
     evolutionary_algorithm::population_type evolutionary_algorithm::selection(
         population_type &population, size_t n_of_candidates,
         evolutionary_algorithm::selection_strategy s) {
@@ -160,11 +108,6 @@ namespace portfolio {
         return children;
     }
 
-    void evolutionary_algorithm::display_status(double lambda_value) {
-        std::cout << "Generation #" << ++current_generation_;
-        std::cout << " - Lambda value: " << lambda_value;
-        std::cout << " - Best_fx: " << this->best_fx() << std::endl;
-    }
     double evolutionary_algorithm::best_fx() const {
         if (!this->best_solutions_.empty()) {
             return this->best_solutions_[0]->fx;
@@ -180,19 +123,7 @@ namespace portfolio {
         }
         return os;
     }
-    void evolutionary_algorithm::plot() {
-        auto now = std::chrono::system_clock::now();
-        std::string str_now = date::format("%Y_%m_%d_%H_%M", now);
-        std::string file_name;
-        file_name.append("pareto_");
-        file_name.append(std::to_string(max_generations_));
-        file_name.append("_");
-        file_name.append(str_now);
-        file_name.append(".jpg");
-        // std::cout << file_name << std::endl;
-        pareto::plot_front(pareto_front_);
-        matplot::save(file_name);
-    }
+
     void evolutionary_algorithm::initialize_population() {
         this->population_.resize(0);
         this->population_.reserve(this->population_size_);
@@ -211,7 +142,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 3.0;
             this->children_proportion_ = 7.0;
             this->crossover_probability_ = 0.9;
-            this->mutation_strength_ = 1 / this->problem_.size();
+            this->mutation_strength_ = 1.0 / this->problem_.size();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 0.01;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -227,7 +158,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 0.0;
             this->children_proportion_ = 1.0;
             this->crossover_probability_ = 0.8;
-            this->mutation_strength_ = 1 / this->problem_.size();
+            this->mutation_strength_ = 1.0 / this->problem_.size();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 1.0;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -243,7 +174,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 0.0;
             this->children_proportion_ = 7.0;
             this->crossover_probability_ = 0.1;
-            this->mutation_strength_ = 1 / this->problem_.size();
+            this->mutation_strength_ = 1.0 / this->problem_.size();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 1.0;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -288,13 +219,13 @@ namespace portfolio {
     evolutionary_algorithm::best_solutions_end() {
         return this->best_solutions_.end();
     }
-    size_t evolutionary_algorithm::population_size() {
+    size_t evolutionary_algorithm::population_size() const {
         return this->population_size_;
     }
     void evolutionary_algorithm::population_size(size_t value) {
         this->population_size_ = value;
     }
-    size_t evolutionary_algorithm::number_of_islands() {
+    size_t evolutionary_algorithm::number_of_islands() const {
         return this->number_of_islands_;
     }
     void evolutionary_algorithm::number_of_islands(size_t value) {
@@ -324,74 +255,75 @@ namespace portfolio {
         enum evolutionary_algorithm::island_replacement_policy value) {
         this->island_replacement_policy_ = value;
     }
-    size_t evolutionary_algorithm::migration_epoch() {
+    size_t evolutionary_algorithm::migration_epoch() const {
         return this->migration_epoch_;
     }
     void evolutionary_algorithm::migration_epoch(size_t value) {
         this->migration_epoch_ = value;
     }
-    size_t evolutionary_algorithm::migration_size() {
+    size_t evolutionary_algorithm::migration_size() const {
         return this->migration_size_;
     }
     void evolutionary_algorithm::migration_size(size_t value) {
         this->migration_size_ = value;
     }
-    double evolutionary_algorithm::fitness_sharing_niche_size() {
+    double evolutionary_algorithm::fitness_sharing_niche_size() const {
         return fitness_sharing_niche_size_;
     }
     void evolutionary_algorithm::fitness_sharing_niche_size(double value) {
         this->fitness_sharing_niche_size_ = value;
     }
-    size_t evolutionary_algorithm::max_generations() {
+    size_t evolutionary_algorithm::max_generations() const {
         return this->max_generations_;
     }
     void evolutionary_algorithm::max_generations(size_t value) {
         this->max_generations_ = value;
     }
-    double evolutionary_algorithm::children_proportion() {
+    double evolutionary_algorithm::children_proportion() const {
         return this->children_proportion_;
     }
     void evolutionary_algorithm::children_proportion(double value) {
         this->children_proportion_ = value;
     }
-    double evolutionary_algorithm::crossover_probability() {
+    double evolutionary_algorithm::crossover_probability() const {
         return this->crossover_probability_;
     }
     void evolutionary_algorithm::crossover_probability(double value) {
         this->crossover_probability_ = value;
     }
-    double evolutionary_algorithm::mutation_strength() {
+    double evolutionary_algorithm::mutation_strength() const {
         return this->mutation_strength_;
     }
     void evolutionary_algorithm::mutation_strength(double value) {
         this->mutation_strength_ = value;
     }
-    bool evolutionary_algorithm::competition_between_parents_and_children() {
+    bool
+    evolutionary_algorithm::competition_between_parents_and_children() const {
         return this->competition_between_parents_and_children_;
     }
     void evolutionary_algorithm::competition_between_parents_and_children(
         bool value) {
         this->competition_between_parents_and_children_ = value;
     }
-    unsigned int evolutionary_algorithm::tournament_size() {
+    unsigned int evolutionary_algorithm::tournament_size() const {
         return this->tournament_size_;
     }
     void evolutionary_algorithm::tournament_size(unsigned int value) {
         this->tournament_size_ = value;
     }
-    double evolutionary_algorithm::overselection_proportion() {
+    double evolutionary_algorithm::overselection_proportion() const {
         return this->overselection_proportion_;
     }
     void evolutionary_algorithm::overselection_proportion(double value) {
         this->overselection_proportion_ = value;
     }
-    size_t evolutionary_algorithm::roundrobin_tournament_size() {
+    size_t evolutionary_algorithm::roundrobin_tournament_size() const {
         return roundrobin_tournament_size_;
     }
     void evolutionary_algorithm::roundrobin_tournament_size(size_t value) {
         this->roundrobin_tournament_size_ = value;
     }
-    double evolutionary_algorithm::elitism_proportion() {
+    double evolutionary_algorithm::elitism_proportion() const {
         return this->elitism_proportion_;
     }
     void evolutionary_algorithm::elitism_proportion(double value) {
@@ -429,25 +361,28 @@ namespace portfolio {
         enum evolutionary_algorithm::selection_strategy value) {
         this->survival_selection_strategy_ = value;
     }
-    double evolutionary_algorithm::sigma_bias() { return this->sigma_bias_; }
+    double evolutionary_algorithm::sigma_bias() const {
+        return this->sigma_bias_;
+    }
     void evolutionary_algorithm::sigma_bias(double value) {
         this->sigma_bias_ = value;
     }
-    double evolutionary_algorithm::sigma_constant() {
+    double evolutionary_algorithm::sigma_constant() const {
         return this->sigma_constant_;
     }
     void evolutionary_algorithm::sigma_constant(double value) {
         this->sigma_constant_ = value;
     }
-    double evolutionary_algorithm::linear_rank_selective_pressure() {
+    double evolutionary_algorithm::linear_rank_selective_pressure() const {
         return this->linear_rank_selective_pressure_;
     }
     void evolutionary_algorithm::linear_rank_selective_pressure(double value) {
         this->linear_rank_selective_pressure_ = value;
     }
-    size_t evolutionary_algorithm::n_of_selection_candidates() {
-        return this->population_size_ * this->parents_per_children_ *
-               this->children_proportion_;
+    size_t evolutionary_algorithm::n_of_selection_candidates() const {
+        return static_cast<size_t>(this->population_size_ *
+                                   this->parents_per_children_ *
+                                   this->children_proportion_);
     }
     size_t evolutionary_algorithm::size_of_elite_set() {
         return size_t(
@@ -510,7 +445,7 @@ namespace portfolio {
         }
     }
     void evolutionary_algorithm::sigma_scaling(
-        evolutionary_algorithm::population_type &population) {
+        evolutionary_algorithm::population_type &population) const {
         for (individual_ptr &ind : population) {
             ind->fitness = -ind->fx;
         }
@@ -608,7 +543,7 @@ namespace portfolio {
     evolutionary_algorithm::population_type
     evolutionary_algorithm::tournament_selection(
         evolutionary_algorithm::population_type &population,
-        size_t n_of_candidates) {
+        size_t n_of_candidates) const {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
@@ -703,7 +638,7 @@ namespace portfolio {
     evolutionary_algorithm::population_type
     evolutionary_algorithm::roundrobin_selection(
         evolutionary_algorithm::population_type &population,
-        size_t n_of_candidates) {
+        size_t n_of_candidates) const {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
@@ -770,7 +705,7 @@ namespace portfolio {
         }
     }
     evolutionary_algorithm::population_type evolutionary_algorithm::get_island(
-        evolutionary_algorithm::population_type &population, int idx) {
+        evolutionary_algorithm::population_type &population, int idx) const {
         population_type island;
         const size_t island_size = population.size() / this->number_of_islands_;
         island.insert(island.end(), population.begin() + idx * island_size,
@@ -918,110 +853,6 @@ namespace portfolio {
             }
         }
     }
-    double evolutionary_algorithm::lambda_value() const {
-        return lambda_value_;
-    }
-    void evolutionary_algorithm::lambda_value(double value) {
-        lambda_value_ = value;
-    }
-    pareto::front<double, 2, portfolio> &
-    evolutionary_algorithm::pareto_front() {
-        return this->pareto_front_;
-    }
-    void evolutionary_algorithm::new_evaluate() {
-        initialize_population();
-        std::vector<double> x;
-        std::vector<double> y;
-        std::vector<unsigned> in(this->population_size());
-        std::iota(in.begin(), in.end(), 0);
-        std::vector<bool> dominated(this->population_.size(), false);
-        for (individual_ptr &item : this->population_) {
-            item->risk_return = item->evaluate_mad(this->problem_);
-            item->crowding_distance = 0.0;
-            item->risk = item->risk_return.first;
-            item->expected_return = item->risk_return.second;
-            x.push_back(item->risk_return.first);
-            y.push_back(item->risk_return.second);
-        }
-        std::sort(this->population_.begin(), this->population_.end(),
-                  [](const individual_ptr &left, individual_ptr &right) {
-                      if (left->risk_return.first < right->risk_return.first) {
-                          return true;
-                      }
-                      if (left->risk_return.first > right->risk_return.first) {
-                          return false;
-                      }
-                      if (left->risk_return.second >
-                          right->risk_return.second) {
-                          return true;
-                      } else {
-                          return false;
-                      }
-                  });
-
-        unsigned ind = 1;
-        while (!in.empty()) {
-            for (auto &i : in) {
-                dominated[i] = false;
-            }
-            bool decision = true;
-            double z;
-            for (size_t i = 0; i < in.size() - 1; ++i) {
-                if (decision) {
-                    z = population_[in[i]]->risk_return.second;
-                }
-                if (population_[in[i + 1]]->risk_return.second > z) {
-                    decision = true;
-                } else {
-                    dominated[in[i + 1]] = true;
-                    decision = false;
-                }
-            }
-            std::vector<unsigned> ranked;
-            for (auto &i : in) {
-                if (!dominated[i]) {
-                    population_[i]->rank = ind;
-                    ranked.push_back(i);
-                }
-            }
-            // calculate crowding distance
-            if (ranked.size() == 1) {
-                this->population_[ranked[0]]->crowding_distance =
-                    std::numeric_limits<double>::max();
-            } else if (ranked.size() == 2) {
-                this->population_[ranked[0]]->crowding_distance =
-                    std::numeric_limits<double>::max();
-                this->population_[ranked[1]]->crowding_distance =
-                    std::numeric_limits<double>::max();
-            } else {
-                double f_min =
-                    this->population_[*ranked.begin()]->risk_return.second;
-                double f_max =
-                    this->population_[*ranked.rbegin()]->risk_return.second;
-                this->population_[*ranked.begin()]->crowding_distance =
-                    std::numeric_limits<double>::max();
-                this->population_[*ranked.rbegin()]->crowding_distance =
-                    std::numeric_limits<double>::max();
-                for (size_t i = 1; i < ranked.size() - 1; ++i) {
-                    this->population_[ranked[i]]->crowding_distance +=
-                        (this->population_[ranked[i + 1]]->risk_return.second -
-                         this->population_[ranked[i - 1]]->risk_return.second) /
-                        (f_max - f_min);
-                }
-            }
-            std::vector<unsigned> diff;
-            std::set_difference(in.begin(), in.end(), ranked.begin(),
-                                ranked.end(),
-                                std::inserter(diff, diff.begin()));
-            in = std::move(diff);
-            ind++;
-        }
-
-        auto p1 = matplot::scatter(x, y);
-        p1->color({1.f, 0.f, 0.f});
-        p1->marker_face_color({1.f, 0.f, 0.f});
-        matplot::save("points.jpg");
-    }
     void evolutionary_algorithm::nsga2_run() {
         initialize_population();
         for (int i = 0; i < this->max_generations_; ++i) {
@@ -1057,11 +888,6 @@ namespace portfolio {
         this->population_ =
             selection(parents_and_children, this->population_size_,
                       this->survival_selection_strategy_);
-        //        this->population_ = insert_elite_set(survivors,
-        //        parents_and_children,
-        //                                             size_of_elite_set);
-        //        int b = this->population_.size();
-        // migration_step();
     }
     void evolutionary_algorithm::nsga2_evaluate(
         evolutionary_algorithm::population_type &population) {
@@ -1146,7 +972,7 @@ namespace portfolio {
     evolutionary_algorithm::population_type
     evolutionary_algorithm::nsga2_tournament_selection(
         evolutionary_algorithm::population_type &population,
-        size_t n_of_candidates) {
+        size_t n_of_candidates) const {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
@@ -1205,22 +1031,27 @@ namespace portfolio {
         std::shuffle(parents.begin(), parents.end(), generator);
         return parents;
     }
-    void evolutionary_algorithm::save_to_json(std::string filename) {
-        std::map<int, std::pair<double, double>> to_save;
-        int c = 1;
-        double h = this->pareto_front_.hypervolume();
-        double s = this->pareto_front_.average_distance();
-        to_save.emplace(std::make_pair(0, std::make_pair(h, s)));
-        for (individual_ptr i : this->population_) {
-            if (i->rank == 1) {
-                to_save.emplace(std::make_pair(c, i->risk_return));
-                c++;
+
+    pareto::front<double, 2, portfolio>
+    evolutionary_algorithm::pareto_front() const {
+        return this->pareto_front_;
+    }
+    void evolutionary_algorithm::nsga2_run(size_t generations) {
+        this->max_generations_ = generations;
+        if (this->population_.size() != this->population_size_) {
+            initialize_population();
+        }
+        for (int i = 0; i < this->max_generations_; ++i) {
+            nsga2_evolutionary_cycle();
+        }
+        for (individual_ptr &item : this->population_) {
+            if (item->rank == 1) {
+                pareto_front_.insert(std::make_pair(
+                    pareto::front<double, 2, portfolio>::key_type(
+                        {item->risk_return.first, item->risk_return.second}),
+                    *item));
             }
         }
-        nlohmann::json j_to_save(to_save);
-        std::ofstream fout(filename);
-        fout << j_to_save.dump();
-        fout.close();
     }
 
     void
@@ -1256,7 +1087,6 @@ namespace portfolio {
                 v -= 2 * (v - ub);
             }
         }
-        return;
     }
     evolutionary_algorithm::individual
     evolutionary_algorithm::individual::crossover(market_data &p,

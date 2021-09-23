@@ -30,21 +30,11 @@ namespace portfolio {
         }
         return os;
     }
-    void random_search::plot() {
-        auto now = std::chrono::system_clock::now();
-        std::string str_now = date::format("%Y_%m_%d_%H_%M", now);
-        std::string file_name;
-        file_name.append("pareto_");
-        file_name.append(std::to_string(n_random_));
-        file_name.append("_");
-        file_name.append(str_now);
-        file_name.append(".jpg");
-        std::cout << file_name << std::endl;
-        pareto::plot_front(pareto_front_);
-        matplot::save(file_name);
-    }
     void random_search::run(size_t n_random) {
         this->n_random_ = n_random;
         this->run();
+    }
+    pareto::front<double, 2, portfolio> random_search::pareto_front() const {
+        return this->pareto_front_;
     }
 } // namespace portfolio

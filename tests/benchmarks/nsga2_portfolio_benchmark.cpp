@@ -11,9 +11,10 @@
 #include <random>
 #include <vector>
 
-void generate_portfolio_nsga2(benchmark::State &state) {
+static void generate_portfolio_nsga2(benchmark::State &state) {
     using namespace date::literals;
     using namespace std::chrono_literals;
+    state.PauseTiming();
     std::vector<std::string> assets = {
         "ABEV3.SAO", "ALPA4.SAO",  "ALSO3.SAO",  "AMAR3.SAO",
         "AZUL4.SAO", // ASAI3.SAO
@@ -57,13 +58,18 @@ void generate_portfolio_nsga2(benchmark::State &state) {
     portfolio::evolutionary_algorithm solver(md);
     solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
     solver.population_size(300);
+    state.ResumeTiming();
     for (auto _ : state) {
         solver.max_generations(state.range(0));
         solver.nsga2_run();
-        benchmark::DoNotOptimize(solver);
     }
 }
 
-BENCHMARK(generate_portfolio_nsga2)->Range(100, 500);
+BENCHMARK(generate_portfolio_nsga2)
+    ->Arg(10)
+    ->Arg(25)
+    ->Arg(50)
+    ->Arg(75)
+    ->Arg(100);
 
 BENCHMARK_MAIN();

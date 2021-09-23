@@ -1,17 +1,11 @@
 //
-// Created by eduardo on 21/06/2021.
+// Created by eduar on 21/09/2021.
 //
-#include <benchmark/benchmark.h>
-
-#include "portfolio/data_feed/alphavantage_data_feed.h"
+#include "portfolio/evolutionary_algorithm.h"
 #include "portfolio/data_feed/mock_data_feed.h"
-#include "portfolio/portfolio.h"
-#include "portfolio/random_search.h"
-#include <algorithm>
-#include <random>
-#include <vector>
-
-void generate_random_portfolio(benchmark::State &state) {
+#include "portfolio/evolutionary_algorithm.h"
+#include "portfolio/matplot/pareto_front.h"
+int main() {
     using namespace date::literals;
     using namespace std::chrono_literals;
     std::vector<std::string> assets = {
@@ -48,23 +42,16 @@ void generate_random_portfolio(benchmark::State &state) {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
-    // portfolio::alphavantage_data_feed af("demo", true);
+    // portfolio::alphavantage_data_feed af("demo", false);
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
                               portfolio::timeframe::weekly, interval, 12);
     //    portfolio::market_data md(assets, af, mp_start, mp_end,
-    //                              portfolio::timeframe::weekly, interval, 12);
+    //                                  portfolio::timeframe::weekly,interval,12);
     portfolio::portfolio port(md);
-    //    random_search<portfolio::market_data, portfolio::portfolio>(
-    //        assets, mock_df, mp_start, mp_end, portfolio::timeframe::daily,
-    //        interval, 30);
-    portfolio::random_search random(md);
-    for (auto _ : state) {
-        random.run(state.range(0));
-        benchmark::DoNotOptimize(random);
-        benchmark::ClobberMemory();
-    }
+    portfolio::evolutionary_algorithm solver(md);
+    solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
+    solver.population_size(300);
+    solver.max_generations(100);
+    solver.nsga2_run();
+    portfolio::save_plot(solver.pareto_front(), "plot.jpg");
 }
-
-BENCHMARK(generate_random_portfolio)->Arg(1);
-
-BENCHMARK_MAIN();

@@ -199,4 +199,37 @@ namespace portfolio {
         }
         return total;
     }
+    portfolio portfolio::crossover_blx(const market_data &data,
+                                       portfolio &rhs) {
+
+        portfolio child(data);
+        std::vector<std::string> assets_new;
+        std::vector<std::string> assets_remove;
+        std::vector<double> assets_prorp;
+
+        for (auto &[key, value] : child.assets_proportions_) {
+            child.assets_proportions_[key] =
+                (0.5 * this->assets_proportions_[key]) +
+                (0.5 * rhs.assets_proportions_[key]);
+            if (!almost_equal(child.assets_proportions_[key], 0.0)) {
+                assets_new.push_back(key);
+                assets_prorp.push_back(child.assets_proportions_.at(key));
+            }
+        }
+        int k = assets_new.size();
+        while (k > this->k_) {
+            int index =
+                std::min_element(assets_prorp.begin(), assets_prorp.end()) -
+                assets_prorp.begin();
+            assets_prorp.erase(assets_prorp.begin() + index);
+            assets_remove.push_back(assets_new.at(index));
+            assets_new.erase(assets_new.begin() + index);
+            k--;
+        }
+        for (auto &a : assets_remove) {
+            child.assets_proportions_[a] = 0.0;
+        }
+        child.normalize_allocation();
+        return child;
+    }
 } // namespace portfolio

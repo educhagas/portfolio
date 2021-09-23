@@ -24,6 +24,7 @@ namespace portfolio {
 
         void mutation(market_data &p, double mutation_strength);
         portfolio crossover(const market_data &data, portfolio &rhs);
+        portfolio crossover_blx(const market_data &data, portfolio &rhs);
         double distance(market_data &data, portfolio &rhs,
                         double max_dist = std::numeric_limits<double>::max());
         [[nodiscard]] bool invariants() const;

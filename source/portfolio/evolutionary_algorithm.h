@@ -105,10 +105,6 @@ namespace portfolio {
 
         void algorithm(enum algorithm alg);
 
-        void run();
-
-        void run(size_t iterations);
-
         [[nodiscard]] double best_fx() const;
 
         individual_ptr best_solution();
@@ -119,9 +115,9 @@ namespace portfolio {
 
         // Setters and getters
         // Population management
-        size_t population_size();
+        size_t population_size() const;
         void population_size(size_t value);
-        size_t number_of_islands();
+        size_t number_of_islands() const;
         void number_of_islands(size_t value);
         island_structure island_structure();
         void island_structure(enum island_structure value);
@@ -129,32 +125,32 @@ namespace portfolio {
         void island_migration_policy(enum island_migration_policy value);
         island_replacement_policy island_replacement_policy();
         void island_replacement_policy(enum island_replacement_policy value);
-        size_t migration_epoch();
+        size_t migration_epoch() const;
         void migration_epoch(size_t value);
-        size_t migration_size();
+        size_t migration_size() const;
         void migration_size(size_t value);
-        double fitness_sharing_niche_size();
+        double fitness_sharing_niche_size() const;
         void fitness_sharing_niche_size(double value);
         // Stopping criteria
-        size_t max_generations();
+        size_t max_generations() const;
         void max_generations(size_t value);
         // Reproduction
-        double children_proportion();
+        double children_proportion() const;
         void children_proportion(double value);
-        double crossover_probability();
+        double crossover_probability() const;
         void crossover_probability(double value);
-        double mutation_strength();
+        double mutation_strength() const;
         void mutation_strength(double value);
         // Selection
-        bool competition_between_parents_and_children();
+        bool competition_between_parents_and_children() const;
         void competition_between_parents_and_children(bool value);
-        unsigned int tournament_size();
+        unsigned int tournament_size() const;
         void tournament_size(unsigned int value);
-        double overselection_proportion();
+        double overselection_proportion() const;
         void overselection_proportion(double value);
-        size_t roundrobin_tournament_size();
+        size_t roundrobin_tournament_size() const;
         void roundrobin_tournament_size(size_t value);
-        double elitism_proportion();
+        double elitism_proportion() const;
         void elitism_proportion(double value);
         // scaling
         enum scaling_strategy reproduction_scaling_strategy();
@@ -165,37 +161,31 @@ namespace portfolio {
         void survival_scaling_strategy(enum scaling_strategy value);
         enum selection_strategy survival_selection_strategy();
         void survival_selection_strategy(enum selection_strategy value);
-        double sigma_bias();
+        double sigma_bias() const;
         void sigma_bias(double value);
-        double sigma_constant();
+        double sigma_constant() const;
         void sigma_constant(double value);
-        double linear_rank_selective_pressure();
+        double linear_rank_selective_pressure() const;
         void linear_rank_selective_pressure(double value);
 
       private /* methods */:
         // main cycle
-        // void evolutionary_cycle();
-        void evolutionary_cycle();
 
         // helpers
-        size_t n_of_selection_candidates();
+        size_t n_of_selection_candidates() const;
         size_t size_of_elite_set();
         void display_status();
-
-        // evaluation algorithms
-        // void evaluate(population_type &population);
-        void evaluate(population_type &population);
 
         // scaling algorithms
         void scaling(population_type &population, scaling_strategy s);
 
         void window_scaling(population_type &population);
 
-        void sigma_scaling(population_type &population);
+        void sigma_scaling(population_type &population) const const;
 
         void linear_rank_scaling(population_type &population);
 
-        void exponential_rank_scaling(population_type &population);
+        static void exponential_rank_scaling(population_type &population);
 
         // fitness sharing
         void fitness_sharing(population_type &population);
@@ -211,13 +201,14 @@ namespace portfolio {
                                            size_t n_of_candidates);
 
         population_type tournament_selection(population_type &population,
-                                             size_t n_of_candidates);
+                                             size_t n_of_candidates) const;
 
-        population_type nsga2_tournament_selection(population_type &population,
-                                                   size_t n_of_candidates);
+        population_type
+        nsga2_tournament_selection(population_type &population,
+                                   size_t n_of_candidates) const;
 
-        population_type roulette_selection(population_type &population,
-                                           size_t n_of_candidates);
+        static population_type roulette_selection(population_type &population,
+                                                  size_t n_of_candidates);
 
         population_type sus_selection(population_type &population,
                                       size_t n_of_candidates);
@@ -226,7 +217,7 @@ namespace portfolio {
                                                 size_t n_of_candidates);
 
         population_type roundrobin_selection(population_type &population,
-                                             size_t n_of_candidates);
+                                             size_t n_of_candidates) const;
 
         population_type nsga2_truncate_selection(population_type &population,
                                                  size_t n_of_candidates);
@@ -244,15 +235,16 @@ namespace portfolio {
 
         // void population_update_step(population_type &children);
 
-        void initialize_population();
-
         void attribute_fitness_from_rank(population_type &population);
 
-        population_type get_island(population_type &population, int idx);
+        population_type get_island(population_type &population, int idx) const;
 
         void try_to_update_best(individual_ptr &candidate);
 
         void migration_step();
+
+      public:
+        void initialize_population();
 
       private /* members */:
         // Search parameters
@@ -309,29 +301,22 @@ namespace portfolio {
         population_type best_solutions_;
         size_t number_of_best_solutions_ = 10;
 
-        // meus
+        // novos
+
       private:
-        // std::vector<portfolio> result_;
-        // portfolio best_portfolio_;
-        // std::pair<double, double> best_risk_return_;
-        double lambda_step_;
-        double lambda_value_;
         pareto::front<double, 2, portfolio> pareto_front_;
-        void display_status(double lambda_value);
 
       public:
-        pareto::front<double, 2, portfolio> &pareto_front();
+        pareto::front<double, 2, portfolio> pareto_front() const;
+        // pareto::front<double, 2, portfolio> &pareto_front();
 
         friend std::ostream &
         operator<<(std::ostream &os, const evolutionary_algorithm &algorithm);
-        double lambda_value() const;
-        void lambda_value(double value);
-        void plot();
-        void new_evaluate();
+
         void nsga2_evaluate(population_type &population);
         void nsga2_run();
+        void nsga2_run(size_t generations);
         void nsga2_evolutionary_cycle();
-        void save_to_json(std::string filename);
     };
 
 } // namespace portfolio

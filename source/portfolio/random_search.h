@@ -15,7 +15,7 @@ namespace portfolio {
         void run(size_t n_randon);
         friend std::ostream &operator<<(std::ostream &os,
                                         const random_search &search);
-        void plot();
+        pareto::front<double, 2, portfolio> pareto_front() const;
 
       private:
         pareto::front<double, 2, portfolio> pareto_front_;

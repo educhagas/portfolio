@@ -105,7 +105,9 @@ add_library(portfolio
         portfolio/evolutionary_algorithm.h
         portfolio/evolutionary_algorithm.cpp
         portfolio/random_search.h
-        portfolio/random_search.cpp)
+        portfolio/random_search.cpp
+        portfolio/matplot/pareto_front.h
+        portfolio/matplot/pareto_front.cpp)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
