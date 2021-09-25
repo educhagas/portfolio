@@ -19,13 +19,34 @@ namespace portfolio {
         std::string str_end = minute_point_to_string(interval.second);
         return str_start + "|" + str_end;
     }
-
+    int parse_int(const char *b, const char *e) {
+        int i = 0;
+        for (; b != e; ++b)
+            i = 10 * i + (*b - '0');
+        return i;
+    }
     minute_point string_to_minute_point(std::string_view str_mp) {
+
+        // YYYY - MM - DD _ HH - MM
+        // 0123 4 56 7 89 0 12 3 45
+
         std::string str(str_mp);
-        std::chrono::system_clock::time_point dt;
-        std::stringstream ss(str);
-        ss >> date::parse("%Y-%m-%d_%H-%M", dt);
-        return std::chrono::floor<std::chrono::minutes>(dt);
+        int y = parse_int(str.data() + 0, str.data() + 4);
+        int m = parse_int(str.data() + 5, str.data() + 7);
+        int d = parse_int(str.data() + 8, str.data() + 10);
+        int h = parse_int(str.data() + 11, str.data() + 13);
+        int M = parse_int(str.data() + 14, str.data() + 16);
+        // return sys_days{year{y}/m/d} + hours{h} + minutes{M} + seconds{0};
+
+        //        std::chrono::system_clock::time_point dt;
+        //        std::stringstream ss(str);
+        //        ss >> date::parse("%Y-%m-%d_%H-%M", dt);
+
+        // ss >> std::chrono::parse("%Y-%m-%d_%H-%M", dt);
+        // return std::chrono::floor<std::chrono::minutes>(dt);
+        return std::chrono::floor<std::chrono::minutes>(
+            date::sys_days{date::year{y} / m / d} + std::chrono::hours{h} +
+            std::chrono::minutes{M} + std::chrono::seconds{0});
     }
 
     interval_points string_to_interval_points(std::string_view str_interval) {

@@ -3,8 +3,10 @@
 #include "portfolio/common/algorithm.h"
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
+#include "portfolio/evolutionary_algorithm.h"
 #include "portfolio/market_data.h"
 #include "portfolio/portfolio.h"
+#include "portfolio/random_search.h"
 #include <catch2/catch.hpp>
 #include <chrono>
 
@@ -26,7 +28,7 @@ TEST_CASE("Portfolio and Market Data") {
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
-                              portfolio::timeframe::daily);
+                              portfolio::timeframe::daily, interval, 12);
 
     SECTION("Market Data") {
         REQUIRE(md.contains("ABEV3.SAO"));
@@ -36,19 +38,23 @@ TEST_CASE("Portfolio and Market Data") {
     SECTION("Portfolio") {
         // The expected return of portfolio needs to be different from 0. Risk
         // needs to be greater than 0.
-        auto risk_return = port.evaluate_mad(md, interval, 40);
+        auto risk_return = port.evaluate_mad(md);
         REQUIRE(risk_return.first > 0);
         REQUIRE(risk_return.second != 0);
         end_interval = date::sys_days{2020_y / 01 / 01} + 18h + 01min;
         interval = std::make_pair(start_interval, end_interval);
         // If the interval is not valid, it throws an exception and ends the
         // execution.
-        REQUIRE_THROWS(port.evaluate_mad(md, interval, 40));
+        md.interval(interval);
+        md.n_periods(40);
+        REQUIRE_THROWS(port.evaluate_mad(md));
         start_interval = date::sys_days{2018_y / 02 / 01} + 10h + 0min;
         end_interval = date::sys_days{2018_y / 02 / 01} + 18h + 00min;
         interval = std::make_pair(start_interval, end_interval);
+        md.interval(interval);
+        md.n_periods(30);
         // If the period is greater than the number of previous intervals in
         // market_data, it throws an exception and ends the execution.
-        REQUIRE_THROWS(port.evaluate_mad(md, interval, 30));
+        REQUIRE_THROWS(port.evaluate_mad(md));
     }
 }
