@@ -1,10 +1,12 @@
 //
 // Created by eduar on 21/09/2021.
 //
-#include "portfolio/evolutionary_algorithm.h"
 #include "portfolio/data_feed/mock_data_feed.h"
 #include "portfolio/evolutionary_algorithm.h"
 #include "portfolio/matplot/pareto_front.h"
+#include "portfolio/problem/problem.h"
+#include "portfolio/problem/return/portfolio_return_mean.h"
+#include "portfolio/problem/risk/portfolio_risk_mad.h"
 int main() {
     using namespace date::literals;
     using namespace std::chrono_literals;
@@ -43,15 +45,21 @@ int main() {
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
     // portfolio::alphavantage_data_feed af("demo", false);
+    size_t periods = 12;
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
-                              portfolio::timeframe::weekly, interval, 12);
+                              portfolio::timeframe::weekly);
     //    portfolio::market_data md(assets, af, mp_start, mp_end,
     //                                  portfolio::timeframe::weekly,interval,12);
-    portfolio::portfolio port(md);
-    portfolio::evolutionary_algorithm solver(md);
+    std::shared_ptr<portfolio::portfolio_return_mean> pm(
+        new portfolio::portfolio_return_mean(md, interval, periods));
+    std::shared_ptr<portfolio::portfolio_risk_mad> pr(
+        new portfolio::portfolio_risk_mad(md, interval, periods));
+    portfolio::problem prob(pr, pm, md, interval);
+    portfolio::portfolio port(prob);
+    portfolio::evolutionary_algorithm solver(prob);
     solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
-    solver.population_size(300);
-    solver.max_generations(100);
+    solver.population_size(600);
+    solver.max_generations(300);
     solver.run();
     portfolio::save_plot(solver.pareto_front(), "plot.jpg");
 }

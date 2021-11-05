@@ -100,14 +100,22 @@ add_library(portfolio
         portfolio/common/algorithm.cpp
         portfolio/core/ohlc_prices.h
         portfolio/core/ohlc_prices.cpp
-        portfolio/portfolio_mad.cpp
-        portfolio/portfolio_mad.h
         portfolio/evolutionary_algorithm.h
         portfolio/evolutionary_algorithm.cpp
         portfolio/random_search.h
         portfolio/random_search.cpp
         portfolio/matplot/pareto_front.h
-        portfolio/matplot/pareto_front.cpp)
+        portfolio/matplot/pareto_front.cpp
+        portfolio/problem/problem.h
+        portfolio/problem/problem.cpp
+        portfolio/problem/return/portfolio_return.h
+        portfolio/problem/return/portfolio_return.cpp
+        portfolio/problem/risk/portfolio_risk.h
+        portfolio/problem/risk/portfolio_risk.cpp
+        portfolio/problem/risk/portfolio_risk_mad.h
+        portfolio/problem/risk/portfolio_risk_mad.cpp
+        portfolio/problem/return/portfolio_return_mean.h
+        portfolio/problem/return/portfolio_return_mean.cpp)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

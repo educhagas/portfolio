@@ -1,28 +1,33 @@
 //
-// Created by eduardo on 15/04/2021.
+// Created by eduar on 26/10/2021.
 //
 
-#include "portfolio_mad.h"
-#include "portfolio/common/algorithm.h"
-#include <iostream>
-#include <numeric>
-#include <random>
-#include <range/v3/core.hpp>
+#include "portfolio_risk_mad.h"
 #include <range/v3/numeric/accumulate.hpp>
 namespace portfolio {
-    portfolio_mad::portfolio_mad(const market_data &data) {
-        this->interval_= data.interval();
-        this->n_periods_= data.n_periods();
+    double portfolio_risk_mad::evaluate_risk(
+        assets_proportions_iterator assets_proportion_begin,
+        assets_proportions_iterator assets_proportion_end) {
+        double risk = 0.0;
+        for (auto a = assets_proportion_begin; a != assets_proportion_end;
+             ++a) {
+            risk += this->assets_risk_.at(a->first) * a->second;
+        }
+        return risk;
+    }
+    portfolio_risk_mad::portfolio_risk_mad(const market_data &data,
+                                           const interval_points &interval,
+                                           const size_t &n_periods) {
         for (auto a = data.assets_map_begin(); a != data.assets_map_end();
              ++a) {
             data_feed_result df = a->second;
-            auto price_it = df.find_prices_from(interval_);
+            auto price_it = df.find_prices_from(interval);
             if (price_it == df.end()) {
                 throw std::runtime_error("MAD_PORTFOLIO constructor error: "
                                          "interval not found for asset " +
                                          a->first);
             }
-            for (size_t i = 0; i < n_periods_; ++i) {
+            for (size_t i = 0; i < n_periods; ++i) {
                 if (price_it != df.begin())
                     price_it--;
                 else
@@ -32,7 +37,7 @@ namespace portfolio {
                         a->first);
             }
             std::vector<double> asset_returns;
-            for (size_t i = 0; i < n_periods_; ++i) {
+            for (size_t i = 0; i < n_periods; ++i) {
                 double price_0 = price_it->second.close();
                 price_it++;
                 double price_1 = price_it->second.close();
@@ -45,16 +50,7 @@ namespace portfolio {
                                                 return mad + std::abs(d - mean);
                                             }) /
                          asset_returns.size();
-            assets_risk_return_[a->first] = std::make_pair(mad, mean);
+            assets_risk_[a->first] = mad;
         }
     }
-    interval_points portfolio_mad::interval() const { return interval_; }
-    int portfolio_mad::n_periods() const { return n_periods_; }
-    double portfolio_mad::risk(std::string_view asset) const {
-        return assets_risk_return_.at(std::string(asset)).first;
-    }
-    double portfolio_mad::expected_return(std::string_view asset) const {
-        return assets_risk_return_.at(std::string(asset)).second;
-    }
-
 } // namespace portfolio

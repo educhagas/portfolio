@@ -20,8 +20,8 @@ namespace portfolio {
     }
 
     price_iterator
-    data_feed_result::find_prices_from(interval_points interval) {
-        return historical_data_.find(interval);
+    data_feed_result::find_prices_from(interval_points interval) const {
+        return this->historical_data_.find(interval);
     }
 
     ohlc_prices data_feed_result::closest_prices(minute_point date_time) const {

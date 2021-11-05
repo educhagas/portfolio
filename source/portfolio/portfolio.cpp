@@ -25,25 +25,25 @@ namespace portfolio {
         return almost_equal(this->total_allocation(), 1.0) && this->k_ == k &&
                in_bounds;
     }
-    portfolio::portfolio(const market_data &data)
+    portfolio::portfolio(const problem &problem)
         : lower_bound_(0.08), upper_bound_(0.15), k_(10) {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
         std::uniform_real_distribution<double> d_real(lower_bound_,
                                                       upper_bound_);
-        std::uniform_int_distribution<int> d_int(1, int(data.size()));
+        std::uniform_int_distribution<int> d_int(1, int(problem.n_assets()));
         std::vector<std::string> selected_assets;
         int aux = 0;
-        for (auto a = data.assets_map_begin(); a != data.assets_map_end();
-             ++a) {
+        for (auto a = problem.assets_prices_begin();
+             a != problem.assets_prices_end(); ++a) {
             this->assets_proportions_[a->first] = 0.0;
         }
         while (selected_assets.size() < k_) {
-            for (auto a = data.assets_map_begin(); a != data.assets_map_end();
-                 ++a) {
+            for (auto a = problem.assets_prices_begin();
+                 a != problem.assets_prices_end(); ++a) {
                 if (d_int(generator) <=
-                    data.size() / k_) { // asset is selected or not
+                    problem.n_assets() / k_) { // asset is selected or not
                     if (std::find(selected_assets.begin(),
                                   selected_assets.end(),
                                   a->first) == selected_assets.end()) {
@@ -108,40 +108,43 @@ namespace portfolio {
             });
         return total;
     }
-    std::pair<double, double> portfolio::evaluate_mad(const market_data &data) {
-        if (mad_) {
-            if (mad_->n_periods() != data.n_periods() ||
-                mad_->interval() != data.interval()) {
-                mad_.reset();
-                mad_.emplace(data);
-            }
-        } else {
-            mad_.emplace(data);
-        }
-        double total_risk = 0.0;
-        double total_return = 0.0;
-        for (auto &a : assets_proportions_) {
-            total_risk += a.second * mad_->risk(a.first);
-            total_return += a.second * mad_->expected_return(a.first);
-        }
-        return std::make_pair(total_risk, total_return);
+    std::pair<double, double> portfolio::evaluate(problem &problem) {
+        //        if (mad_) {
+        //            if (mad_->n_periods() != data.n_periods() ||
+        //                mad_->interval() != data.interval()) {
+        //                mad_.reset();
+        //                mad_.emplace(data);
+        //            }
+        //        } else {
+        //            mad_.emplace(data);
+        //        }
+        //        double total_risk = 0.0;
+        //        double total_return = 0.0;
+        //        for (auto &a : assets_proportions_) {
+        //            total_risk += a.second * mad_->risk(a.first);
+        //            total_return += a.second * mad_->expected_return(a.first);
+        //        }
+        //        return std::make_pair(total_risk, total_return);
+        return problem.evaluate(this->assets_proportions_begin(),
+                                this->assets_proportions_end());
     }
     std::ostream &operator<<(std::ostream &os, const portfolio &portfolio1) {
         os << "Assets allocations:\n";
-        for (auto &a : portfolio1.assets_proportions_) {
-            if (!almost_equal(a.second, 0.0)) {
-                os << "Asset: " << a.first << " - Allocation " << a.second;
-                if (portfolio1.mad_) {
-                    os << " - Expect return: "
-                       << portfolio1.mad_->expected_return(a.first);
-                    os << " - Risk: " << portfolio1.mad_->risk(a.first);
-                }
-                os << "\n";
-            }
-        }
+        //        for (auto &a : portfolio1.assets_proportions_) {
+        //            if (!almost_equal(a.second, 0.0)) {
+        //                os << "Asset: " << a.first << " - Allocation " <<
+        //                a.second; if (portfolio1.mad_) {
+        //                    os << " - Expect return: "
+        //                       << portfolio1.mad_->expected_return(a.first);
+        //                    os << " - Risk: " <<
+        //                    portfolio1.mad_->risk(a.first);
+        //                }
+        //                os << "\n";
+        //            }
+        //        }
         return os;
     }
-    void portfolio::mutation(market_data &p, double mutation_strength) {
+    void portfolio::mutation(problem &p, double mutation_strength) {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
@@ -153,11 +156,11 @@ namespace portfolio {
         }
         this->normalize_allocation();
     }
-    portfolio portfolio::crossover(const market_data &data, portfolio &rhs) {
+    portfolio portfolio::crossover(const problem &problem, portfolio &rhs) {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
-        portfolio child(data);
+        portfolio child(problem);
         std::vector<std::string> assets_this;
         std::vector<std::string> assets_rhs;
         std::vector<std::string> assets_total;
@@ -187,7 +190,7 @@ namespace portfolio {
         child.normalize_allocation();
         return child;
     }
-    double portfolio::distance(market_data &data, portfolio &rhs,
+    double portfolio::distance(problem &problem, portfolio &rhs,
                                double max_dist) {
         double total = 0.0;
         for (auto &[key, _] : assets_proportions_) {
@@ -199,10 +202,9 @@ namespace portfolio {
         }
         return total;
     }
-    portfolio portfolio::crossover_blx(const market_data &data,
-                                       portfolio &rhs) {
+    portfolio portfolio::crossover_blx(const problem &problem, portfolio &rhs) {
 
-        portfolio child(data);
+        portfolio child(problem);
         std::vector<std::string> assets_new;
         std::vector<std::string> assets_remove;
         std::vector<double> assets_prorp;
@@ -232,4 +234,16 @@ namespace portfolio {
         child.normalize_allocation();
         return child;
     }
+    double portfolio::asset_proportion(std::string asset) const {
+        return assets_proportions_.at(asset);
+    }
+    std::map<std::string, double>::const_iterator
+    portfolio::assets_proportions_begin() const {
+        return this->assets_proportions_.cbegin();
+    }
+    std::map<std::string, double>::const_iterator
+    portfolio::assets_proportions_end() const {
+        return this->assets_proportions_.cend();
+    }
+
 } // namespace portfolio
