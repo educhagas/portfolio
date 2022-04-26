@@ -24,7 +24,7 @@ namespace portfolio {
                 else
                     throw std::runtime_error(
                         "MAD_PORTFOLIO constructor error: "
-                        "n_periods out of market_data for asset: " +
+                        "n_periods out of market_data for " +
                         a->first);
             }
             std::vector<double> asset_returns;

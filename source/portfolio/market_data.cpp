@@ -5,6 +5,7 @@
 #include "market_data.h"
 #include "portfolio/common/algorithm.h"
 #include "portfolio/data_feed/alphavantage_data_feed.h"
+#include <iostream>
 #include <utility>
 namespace portfolio {
 
@@ -13,6 +14,7 @@ namespace portfolio {
                              minute_point end_period, timeframe tf)
         : data_feed_(df) {
         for (auto &str : asset_list) {
+            // std::cout<<"Asset: "<< str <<std::endl;
             data_feed_result data =
                 data_feed_.fetch(str, start_period, end_period, tf);
             assets_map_.emplace(str, std::move(data));

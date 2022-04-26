@@ -115,7 +115,10 @@ add_library(portfolio
         portfolio/problem/risk/portfolio_risk_mad.h
         portfolio/problem/risk/portfolio_risk_mad.cpp
         portfolio/problem/return/portfolio_return_mean.h
-        portfolio/problem/return/portfolio_return_mean.cpp)
+        portfolio/problem/return/portfolio_return_mean.cpp
+        portfolio/json/json.cpp portfolio/json/json.h
+        portfolio/problem/return/portfolio_return_mean_cost.cpp
+        portfolio/problem/return/portfolio_return_mean_cost.h)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

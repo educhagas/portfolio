@@ -4,6 +4,7 @@
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
 #include "portfolio/evolutionary_algorithm.h"
+#include "portfolio/json/json.h"
 #include "portfolio/market_data.h"
 #include "portfolio/portfolio.h"
 #include "portfolio/problem/problem.h"
@@ -12,18 +13,7 @@
 #include "portfolio/problem/risk/portfolio_risk_mad.h"
 #include <catch2/catch.hpp>
 #include <chrono>
-
-void new_portfolio_return_mean(portfolio::market_data &md,
-                               portfolio::interval_points &interval,
-                               size_t n_periods) {
-    portfolio::portfolio_return_mean port_return2(md, interval, n_periods);
-}
-
-void new_portfolio_risk_mad(portfolio::market_data &md,
-                            portfolio::interval_points &interval,
-                            size_t n_periods) {
-    portfolio::portfolio_risk_mad port_mad(md, interval, n_periods);
-}
+#include <filesystem>
 
 TEST_CASE("Portfolio and Market Data") {
     using namespace date::literals;
@@ -71,34 +61,48 @@ TEST_CASE("Portfolio and Market Data") {
     std::shared_ptr<portfolio::portfolio_risk_mad> port_mad(
         new portfolio::portfolio_risk_mad(md, interval, periods));
     portfolio::problem prob(port_mad, pm, md, interval);
-
-    SECTION("Market Data") {
-        REQUIRE(md.contains("ABEV3.SAO"));
-        REQUIRE_FALSE(md.contains("ABEH3.SAO"));
+    std::string path = "./";
+    bool data_folder_exists = false;
+    for (const auto &entry : std::filesystem::directory_iterator(path)) {
+        std::string filename(entry.path().filename().string());
+        if (filename == "port_save") {
+            data_folder_exists = true;
+            break;
+        }
     }
+    if (!data_folder_exists) {
+        std::filesystem::create_directory("./port_save");
+    }
+
     portfolio::portfolio port(prob);
-    SECTION("Portfolio") {
-        // The expected return of portfolio needs to be different from 0. Risk
-        // needs to be greater than 0.
-        auto risk_return = port.evaluate(prob);
-        REQUIRE(risk_return.first > 0);
-        REQUIRE(risk_return.second != 0);
+    SECTION("Portfolio save and restore") {
+        double upper_bound = port.upper_bound();
+        double lower_bound = port.lower_bound();
+        size_t k = port.k();
+        portfolio::portfolio_to_json(port, "./port_save/port_test.json");
 
-        end_interval = date::sys_days{2020_y / 01 / 01} + 18h + 01min;
-        interval = std::make_pair(start_interval, end_interval);
-        // If the interval is not valid, it throws an exception and ends the
-        // execution.
-        periods = 40;
-        REQUIRE_THROWS(new_portfolio_return_mean(md, interval, periods));
-        REQUIRE_THROWS(new_portfolio_risk_mad(md, interval, periods));
+        portfolio::portfolio port2 =
+            portfolio::from_json("./port_save/port_test.json");
 
-        start_interval = date::sys_days{2018_y / 02 / 01} + 10h + 0min;
-        end_interval = date::sys_days{2018_y / 02 / 01} + 18h + 00min;
-        interval = std::make_pair(start_interval, end_interval);
-        periods = 30;
-        // If the period is greater than the number of previous intervals in
-        // market_data, it throws an exception and ends the execution.
-        REQUIRE_THROWS(new_portfolio_return_mean(md, interval, periods));
-        REQUIRE_THROWS(new_portfolio_risk_mad(md, interval, periods));
+        // if file exists, not throw exeption
+        REQUIRE_NOTHROW(portfolio::from_json("./port_save/port_test.json"));
+
+        // if file not exists, throws exception
+        REQUIRE_THROWS(portfolio::from_json("./port_save/port_test2.json"));
+
+        REQUIRE(portfolio::almost_equal(port.capital(), port2.capital()));
+        REQUIRE(
+            portfolio::almost_equal(port.upper_bound(), port2.upper_bound()));
+        REQUIRE(
+            portfolio::almost_equal(port.lower_bound(), port2.lower_bound()));
+        REQUIRE(port.k() == port2.k());
+
+        for (auto a = port.assets_proportions_begin();
+             a != port.assets_proportions_end(); ++a) {
+            REQUIRE(portfolio::almost_equal(port.asset_proportion(a->first),
+                                            port2.asset_proportion(a->first)));
+            REQUIRE(portfolio::almost_equal(port.asset_price(a->first),
+                                            port2.asset_price(a->first)));
+        }
     }
 }

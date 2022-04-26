@@ -1,12 +1,12 @@
 //
-// Created by eduar on 21/09/2021.
+// Created by eduar on 23/04/2022.
 //
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
 #include "portfolio/evolutionary_algorithm.h"
 #include "portfolio/matplot/pareto_front.h"
 #include "portfolio/problem/problem.h"
-#include "portfolio/problem/return/portfolio_return_mean.h"
+#include "portfolio/problem/return/portfolio_return_mean_cost.h"
 #include "portfolio/problem/risk/portfolio_risk_mad.h"
 int main() {
     using namespace date::literals;
@@ -35,12 +35,12 @@ int main() {
     portfolio::minute_point mp_start =
         date::sys_days{2021_y / 06 / 07} + 10h + 0min;
     portfolio::minute_point mp_end =
-        date::sys_days{2022_y / 01 / 21} + 18h + 0min;
+        date::sys_days{2022_y / 04 / 15} + 18h + 0min;
 
     portfolio::minute_point start_interval =
-        date::sys_days{2022_y / 01 / 10} + 10h + 0min;
+        date::sys_days{2022_y / 01 / 17} + 10h + 0min;
     portfolio::minute_point end_interval =
-        date::sys_days{2022_y / 01 / 14} + 18h + 0min;
+        date::sys_days{2022_y / 01 / 21} + 18h + 0min;
 
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
@@ -51,44 +51,41 @@ int main() {
     //                              portfolio::timeframe::weekly);
     portfolio::market_data md(assets, af, mp_start, mp_end,
                               portfolio::timeframe::weekly);
-    std::shared_ptr<portfolio::portfolio_return_mean> pm(
-        new portfolio::portfolio_return_mean(md, interval, periods));
+    std::shared_ptr<portfolio::portfolio_return_mean_cost> pm(
+        new portfolio::portfolio_return_mean_cost(md, interval, periods,
+                                                  "portfolio_previo.json"));
     std::shared_ptr<portfolio::portfolio_risk_mad> pr(
         new portfolio::portfolio_risk_mad(md, interval, periods));
     portfolio::problem prob(pr, pm, md, interval);
-    std::ofstream fout("test_k30_50.txt");
     pareto::front<double, 2, portfolio::portfolio> pareto_front_result;
     pareto_front_result = pareto::front<double, 2, portfolio::portfolio>(
         {pareto::min, pareto::max});
-    for (size_t i = 0; i < 2; ++i) { // 100
-        fout << i << "\n";
+    for (size_t i = 0; i < 1; ++i) { // 100
+        // fout << i <<"\n";
         portfolio::portfolio port(prob);
         portfolio::evolutionary_algorithm solver(prob);
         solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
-        solver.population_size(200); // 500
-        solver.max_generations(100); // 500
+        solver.population_size(500); // 500
+        solver.max_generations(500); // 500
         auto start = std::chrono::system_clock::now();
         solver.run();
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> diff = end - start;
-        fout << diff.count() << "\n";
-        fout << solver.pareto_front().hypervolume() << "\n";
-        fout << solver.pareto_front().size() << "\n";
         for (auto &p : solver.pareto_front()) {
-            fout << p.first.values()[0] << " ; " << p.first.values()[1] << "\n";
             pareto_front_result.insert(std::make_pair(
                 pareto::front<double, 2, portfolio::portfolio>::key_type(
                     {p.first.values()[0], p.first.values()[1]}),
                 p.second));
         }
     }
-    fout.close();
-    std::ofstream fout2("test_k30_50_result.txt");
-    fout2 << pareto_front_result.hypervolume() << "\n";
-    fout2 << pareto_front_result.size() << "\n";
-    for (auto p : pareto_front_result) {
-        fout2 << p.first.values()[0] << " ; " << p.first.values()[1] << "\n";
-    }
-    fout2.close();
+
+    //    std::ofstream fout2("test_k30_50_result.txt");
+    //    fout2<<pareto_front_result.hypervolume()<<"\n";
+    //    fout2<<pareto_front_result.size()<<"\n";
+    //    for (auto p : pareto_front_result){
+    //        fout2 << p.first.values()[0] << " ; "<<  p.first.values()[1]
+    //        <<"\n";
+    //    }
+    //    fout2.close();
     // portfolio::save_plot(solver.pareto_front(), "plot.jpg");
 }

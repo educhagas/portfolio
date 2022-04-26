@@ -5,8 +5,8 @@
 #include "portfolio.h"
 #include "portfolio/common/algorithm.h"
 #include <iostream>
+#include <map>
 #include <random>
-#include <range/v3/core.hpp>
 #include <range/v3/numeric/accumulate.hpp>
 #include <vector>
 namespace portfolio {
@@ -26,7 +26,7 @@ namespace portfolio {
                in_bounds;
     }
     portfolio::portfolio(const problem &problem)
-        : lower_bound_(0.08), upper_bound_(0.15), k_(10) {
+        : lower_bound_(0.07), upper_bound_(0.13), k_(10), capital_(30000.00) {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());
@@ -38,6 +38,7 @@ namespace portfolio {
         for (auto a = problem.assets_prices_begin();
              a != problem.assets_prices_end(); ++a) {
             this->assets_proportions_[a->first] = 0.0;
+            this->mean_assets_prices_[a->first] = 0.0;
         }
         while (selected_assets.size() < k_) {
             for (auto a = problem.assets_prices_begin();
@@ -48,6 +49,7 @@ namespace portfolio {
                                   selected_assets.end(),
                                   a->first) == selected_assets.end()) {
                         assets_proportions_[a->first] = d_real(generator);
+                        mean_assets_prices_[a->first] = a->second;
                         selected_assets.push_back(a->first);
                         if (selected_assets.size() == k_) {
                             break;
@@ -165,14 +167,18 @@ namespace portfolio {
         std::vector<std::string> assets_rhs;
         std::vector<std::string> assets_total;
         std::vector<std::string> chosen_assets;
+        std::map<std::string, double> prices;
         for (auto &[key, value] : this->assets_proportions_) {
             if (!almost_equal(value, 0.0)) {
                 assets_this.push_back(key);
+                prices[key] = this->mean_assets_prices_[key];
             }
             if (!almost_equal(rhs.assets_proportions_[key], 0.0)) {
                 assets_rhs.push_back(key);
+                prices[key] = rhs.mean_assets_prices_[key];
             }
             child.assets_proportions_[key] = 0.0;
+            child.mean_assets_prices_[key] = 0.0;
         }
         std::set_union(assets_this.begin(), assets_this.end(),
                        assets_rhs.begin(), assets_rhs.end(),
@@ -186,6 +192,7 @@ namespace portfolio {
             child.assets_proportions_[a] =
                 alpha * this->assets_proportions_.at(a) +
                 (1 - alpha) * rhs.assets_proportions_.at(a);
+            child.mean_assets_prices_[a] = prices[a];
         }
         child.normalize_allocation();
         return child;
@@ -244,6 +251,32 @@ namespace portfolio {
     std::map<std::string, double>::const_iterator
     portfolio::assets_proportions_end() const {
         return this->assets_proportions_.cend();
+    }
+    double portfolio::asset_price(std::string asset) const {
+        return this->mean_assets_prices_.at(asset);
+    }
+    double portfolio::capital() const { return this->capital_; }
+    double portfolio::lower_bound() const { return this->lower_bound_; }
+    double portfolio::upper_bound() const { return this->upper_bound_; }
+    size_t portfolio::k() const { return this->k_; }
+    portfolio::portfolio() {}
+    void portfolio::capital(double capital) { this->capital_ = capital; }
+    void portfolio::lower_bound(double lower_bound) {
+        this->lower_bound_ = lower_bound;
+    }
+    void portfolio::upper_bound(double upper_bound) {
+        this->upper_bound_ = upper_bound;
+    }
+    void portfolio::k(size_t k) { this->k_ = k; }
+    void portfolio::assets_proportions(
+        const std::map<std::string, double> &assets_proportions) {
+        this->assets_proportions_.clear();
+        this->assets_proportions_ = assets_proportions;
+    }
+    void portfolio::mean_assets_prices(
+        const std::map<std::string, double> &mean_assets_prices) {
+        this->mean_assets_prices_.clear();
+        this->mean_assets_prices_ = mean_assets_prices;
     }
 
 } // namespace portfolio
