@@ -6,6 +6,9 @@
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
 #include "portfolio/portfolio.h"
+#include "portfolio/problem/problem.h"
+#include "portfolio/problem/return/portfolio_return_mean.h"
+#include "portfolio/problem/risk/portfolio_risk_mad.h"
 #include "portfolio/random_search.h"
 #include <algorithm>
 #include <random>
@@ -49,15 +52,21 @@ void generate_random_portfolio(benchmark::State &state) {
         std::make_pair(start_interval, end_interval);
     portfolio::mock_data_feed mock_df;
     // portfolio::alphavantage_data_feed af("demo", true);
+    size_t periods = 12;
     portfolio::market_data md(assets, mock_df, mp_start, mp_end,
-                              portfolio::timeframe::weekly, interval, 12);
+                              portfolio::timeframe::weekly);
     //    portfolio::market_data md(assets, af, mp_start, mp_end,
-    //                              portfolio::timeframe::weekly, interval, 12);
-    portfolio::portfolio port(md);
+    //                              portfolio::timeframe::weekly);
+    std::shared_ptr<portfolio::portfolio_return_mean> pm(
+        new portfolio::portfolio_return_mean(md, interval, periods));
+    std::shared_ptr<portfolio::portfolio_risk_mad> risk_mad(
+        new portfolio::portfolio_risk_mad(md, interval, periods));
+    portfolio::problem prob(risk_mad, pm, md, interval);
+    portfolio::portfolio port(prob);
     //    random_search<portfolio::market_data, portfolio::portfolio>(
     //        assets, mock_df, mp_start, mp_end, portfolio::timeframe::daily,
     //        interval, 30);
-    portfolio::random_search random(md);
+    portfolio::random_search random(prob);
     for (auto _ : state) {
         random.run(state.range(0));
         benchmark::DoNotOptimize(random);

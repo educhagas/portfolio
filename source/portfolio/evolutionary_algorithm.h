@@ -21,12 +21,12 @@ namespace portfolio {
             individual(portfolio &rhs) : portfolio(rhs) {}
             /// Initialize a new random portfolio using market_data.
             /// \param rhs market_data used to initialize a portfolio.
-            individual(market_data &rhs) : portfolio(rhs) {}
+            individual(problem &rhs) : portfolio(rhs) {}
             /// Initialize a new portfolio making a copy of the portfolio
             /// received as a parameter. \param rhs portfolio used to copy.
             individual(portfolio rhs) : portfolio(rhs) {}
-            void mutation(market_data &market, double mutation_strength);
-            individual crossover(market_data &p, individual &rhs);
+            void mutation(problem &problem, double mutation_strength);
+            individual crossover(problem &p, individual &rhs);
             double second_order_mutation_strength_ = 0.1;
             double crossover_probability_ = 0.8;
             double mutation_strength_ = 0.1;
@@ -101,7 +101,7 @@ namespace portfolio {
         };
 
       public:
-        explicit evolutionary_algorithm(market_data &m);
+        explicit evolutionary_algorithm(problem &p);
 
         void algorithm(enum algorithm alg);
 
@@ -281,7 +281,7 @@ namespace portfolio {
 
         // Data
         population_type population_;
-        market_data problem_;
+        problem problem_;
         size_t current_generation_ = 0;
 
         // Solution comparing

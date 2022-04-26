@@ -15,7 +15,7 @@ namespace portfolio {
                                                  std::chrono::minutes>;
     using interval_points = std::pair<minute_point, minute_point>;
     using price_map = std::map<interval_points, ohlc_prices>;
-    using price_iterator = price_map::iterator;
+    using price_iterator = price_map::const_iterator;
     enum class timeframe { daily, weekly, monthly, hourly, minutes_15 };
     class data_feed {
       public:

@@ -8,16 +8,15 @@
 
 namespace portfolio {
 
-    random_search::random_search(market_data &m) : market_(m) {
+    random_search::random_search(problem &p) : problem_(p) {
         pareto_front_ =
             pareto::front<double, 2, portfolio>({pareto::min, pareto::max});
         n_random_ = 1000;
     }
     void random_search::run() {
         for (size_t i = 0; i < n_random_; ++i) {
-            portfolio p(market_);
-            std::pair<double, double> risk_return =
-                p.evaluate_mad(this->market_);
+            portfolio p(problem_);
+            std::pair<double, double> risk_return = p.evaluate(this->problem_);
             pareto_front_.insert(
                 std::make_pair(pareto::front<double, 2, portfolio>::key_type(
                                    {risk_return.first, risk_return.second}),

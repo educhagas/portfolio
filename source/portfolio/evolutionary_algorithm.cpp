@@ -11,9 +11,9 @@
 #include <random>
 namespace portfolio {
 
-    evolutionary_algorithm::evolutionary_algorithm(market_data &m)
-        : problem_(m), mutation_strength_(1.0 / this->problem_.size()),
-          fitness_sharing_niche_size_(0.05 * m.size()) {
+    evolutionary_algorithm::evolutionary_algorithm(problem &p)
+        : problem_(p), mutation_strength_(1.0 / p.n_assets()),
+          fitness_sharing_niche_size_(0.05 * p.n_assets()) {
         this->algorithm(algorithm::DEFAULT);
         pareto_front_ =
             pareto::front<double, 2, portfolio>({pareto::min, pareto::max});
@@ -142,7 +142,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 3.0;
             this->children_proportion_ = 7.0;
             this->crossover_probability_ = 0.9;
-            this->mutation_strength_ = 1.0 / this->problem_.size();
+            this->mutation_strength_ = 1.0 / this->problem_.n_assets();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 0.01;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -158,7 +158,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 0.0;
             this->children_proportion_ = 1.0;
             this->crossover_probability_ = 0.8;
-            this->mutation_strength_ = 1.0 / this->problem_.size();
+            this->mutation_strength_ = 1.0 / this->problem_.n_assets();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 1.0;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -174,7 +174,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 0.0;
             this->children_proportion_ = 7.0;
             this->crossover_probability_ = 0.1;
-            this->mutation_strength_ = 1.0 / this->problem_.size();
+            this->mutation_strength_ = 1.0 / this->problem_.n_assets();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 1.0;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -190,7 +190,7 @@ namespace portfolio {
             this->fitness_sharing_niche_size_ = 0.0;
             this->children_proportion_ = 1.0;
             this->crossover_probability_ = 0.1;
-            this->mutation_strength_ = 1 / this->problem_.size();
+            this->mutation_strength_ = 1 / this->problem_.n_assets();
             this->competition_between_parents_and_children_ = false;
             this->elitism_proportion_ = 1.0;
             this->reproduction_scaling_strategy_ = scaling_strategy::window;
@@ -879,7 +879,7 @@ namespace portfolio {
         std::iota(not_ranked.begin(), not_ranked.end(), 0);
         std::vector<bool> dominated(population.size(), false);
         for (individual_ptr &item : population) {
-            item->risk_return = item->evaluate_mad(this->problem_);
+            item->risk_return = item->evaluate(this->problem_);
             item->crowding_distance = 0.0;
         }
         std::sort(population.begin(), population.end(),
@@ -1039,7 +1039,7 @@ namespace portfolio {
     }
 
     void
-    evolutionary_algorithm::individual::mutation(market_data &market,
+    evolutionary_algorithm::individual::mutation(problem &problem,
                                                  double mutation_strength) {
         // mutate search parameters before they influence mutation
         static std::default_random_engine generator =
@@ -1058,7 +1058,7 @@ namespace portfolio {
         reflect(crossover_probability_, 0.001, 0.999);
 
         // call the underlying mutation function
-        portfolio::mutation(market, mutation_strength_);
+        portfolio::mutation(problem, mutation_strength_);
     }
     void evolutionary_algorithm::individual::reflect(double &v, double lb,
                                                      double ub) {
@@ -1073,8 +1073,7 @@ namespace portfolio {
         }
     }
     evolutionary_algorithm::individual
-    evolutionary_algorithm::individual::crossover(market_data &p,
-                                                  individual &rhs) {
+    evolutionary_algorithm::individual::crossover(problem &p, individual &rhs) {
         static std::default_random_engine generator =
             std::default_random_engine(
                 std::chrono::system_clock::now().time_since_epoch().count());

@@ -1,13 +1,16 @@
 //
-// Created by eduar on 21/09/2021.
+// Created by eduar on 22/04/2022.
 //
+
 #include "portfolio/data_feed/alphavantage_data_feed.h"
 #include "portfolio/data_feed/mock_data_feed.h"
 #include "portfolio/evolutionary_algorithm.h"
+#include "portfolio/json/json.h"
 #include "portfolio/matplot/pareto_front.h"
 #include "portfolio/problem/problem.h"
 #include "portfolio/problem/return/portfolio_return_mean.h"
 #include "portfolio/problem/risk/portfolio_risk_mad.h"
+#include <limits>
 int main() {
     using namespace date::literals;
     using namespace std::chrono_literals;
@@ -56,39 +59,31 @@ int main() {
     std::shared_ptr<portfolio::portfolio_risk_mad> pr(
         new portfolio::portfolio_risk_mad(md, interval, periods));
     portfolio::problem prob(pr, pm, md, interval);
-    std::ofstream fout("test_k30_50.txt");
     pareto::front<double, 2, portfolio::portfolio> pareto_front_result;
     pareto_front_result = pareto::front<double, 2, portfolio::portfolio>(
         {pareto::min, pareto::max});
-    for (size_t i = 0; i < 2; ++i) { // 100
-        fout << i << "\n";
-        portfolio::portfolio port(prob);
-        portfolio::evolutionary_algorithm solver(prob);
-        solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
-        solver.population_size(200); // 500
-        solver.max_generations(100); // 500
-        auto start = std::chrono::system_clock::now();
-        solver.run();
-        auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> diff = end - start;
-        fout << diff.count() << "\n";
-        fout << solver.pareto_front().hypervolume() << "\n";
-        fout << solver.pareto_front().size() << "\n";
-        for (auto &p : solver.pareto_front()) {
-            fout << p.first.values()[0] << " ; " << p.first.values()[1] << "\n";
-            pareto_front_result.insert(std::make_pair(
-                pareto::front<double, 2, portfolio::portfolio>::key_type(
-                    {p.first.values()[0], p.first.values()[1]}),
-                p.second));
+    portfolio::portfolio portfolio_to_save;
+
+    portfolio::portfolio port(prob);
+    portfolio::evolutionary_algorithm solver(prob);
+    solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
+    solver.population_size(500); // 500
+    solver.max_generations(500); // 500
+
+    solver.run();
+
+    double best_risk_return;
+    best_risk_return = std::numeric_limits<double>::max();
+
+    for (auto &p : solver.pareto_front()) {
+        pareto_front_result.insert(std::make_pair(
+            pareto::front<double, 2, portfolio::portfolio>::key_type(
+                {p.first.values()[0], p.first.values()[1]}),
+            p.second));
+        if (p.first.values()[0] / p.first.values()[1] < best_risk_return) {
+            best_risk_return = p.first.values()[0] / p.first.values()[1];
+            portfolio_to_save = p.second;
         }
     }
-    fout.close();
-    std::ofstream fout2("test_k30_50_result.txt");
-    fout2 << pareto_front_result.hypervolume() << "\n";
-    fout2 << pareto_front_result.size() << "\n";
-    for (auto p : pareto_front_result) {
-        fout2 << p.first.values()[0] << " ; " << p.first.values()[1] << "\n";
-    }
-    fout2.close();
-    // portfolio::save_plot(solver.pareto_front(), "plot.jpg");
+    portfolio::portfolio_to_json(portfolio_to_save, "portfolio_previo.json");
 }

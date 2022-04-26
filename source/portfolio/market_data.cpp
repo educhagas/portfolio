@@ -5,16 +5,16 @@
 #include "market_data.h"
 #include "portfolio/common/algorithm.h"
 #include "portfolio/data_feed/alphavantage_data_feed.h"
-#include <ranges>
+#include <iostream>
 #include <utility>
 namespace portfolio {
 
     market_data::market_data(const std::vector<std::string> &asset_list,
                              data_feed &df, minute_point start_period,
-                             minute_point end_period, timeframe tf,
-                             interval_points interval, size_t n_periods)
-        : data_feed_(df), interval_(interval), n_periods_(n_periods) {
+                             minute_point end_period, timeframe tf)
+        : data_feed_(df) {
         for (auto &str : asset_list) {
+            // std::cout<<"Asset: "<< str <<std::endl;
             data_feed_result data =
                 data_feed_.fetch(str, start_period, end_period, tf);
             assets_map_.emplace(str, std::move(data));
@@ -47,12 +47,12 @@ namespace portfolio {
            << "\n";
         return os;
     }
-    size_t market_data::size() const { return assets_map_.size(); }
-    const interval_points &market_data::interval() const { return interval_; }
-    void market_data::interval(const interval_points &interval) {
-        interval_ = interval;
-    }
-    size_t market_data::n_periods() const { return n_periods_; }
-    void market_data::n_periods(size_t nPeriods) { n_periods_ = nPeriods; }
+//    size_t market_data::size() const { return assets_map_.size(); }
+//    const interval_points &market_data::interval() const { return interval_; }
+//    void market_data::interval(const interval_points &interval) {
+//        interval_ = interval;
+//    }
+//    size_t market_data::n_periods() const { return n_periods_; }
+//    void market_data::n_periods(size_t nPeriods) { n_periods_ = nPeriods; }
 
 } // namespace portfolio

@@ -14,7 +14,7 @@ namespace portfolio {
                                                  std::chrono::minutes>;
     using interval_points = std::pair<minute_point, minute_point>;
     using price_map = std::map<interval_points, ohlc_prices>;
-    using price_iterator = price_map::iterator;
+    using price_iterator = price_map::const_iterator;
     class data_feed_result {
       public /* constructors */:
         bool operator==(const data_feed_result &rhs) const;
@@ -38,7 +38,7 @@ namespace portfolio {
         /// \param interval Interval point for searching.
         /// \return A iterator for price of interval or returns end() if not
         /// founded.
-        price_iterator find_prices_from(interval_points interval);
+        price_iterator find_prices_from(interval_points interval) const;
 
         /// \brief Get a iterator for begin of price_map.
         /// \return A iterator for begin of price_map.
