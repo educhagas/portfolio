@@ -60,13 +60,13 @@ int main() {
     pareto::front<double, 2, portfolio::portfolio> pareto_front_result;
     pareto_front_result = pareto::front<double, 2, portfolio::portfolio>(
         {pareto::min, pareto::max});
-    for (size_t i = 0; i < 2; ++i) { // 100
+    for (size_t i = 0; i < 100; ++i) { // 100
         fout << i << "\n";
         portfolio::portfolio port(prob);
         portfolio::evolutionary_algorithm solver(prob);
         solver.algorithm(portfolio::evolutionary_algorithm::algorithm::NSGA2);
-        solver.population_size(200); // 500
-        solver.max_generations(100); // 500
+        solver.population_size(500); // 500
+        solver.max_generations(500); // 500
         auto start = std::chrono::system_clock::now();
         solver.run();
         auto end = std::chrono::system_clock::now();
