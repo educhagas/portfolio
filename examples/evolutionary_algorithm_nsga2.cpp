@@ -45,7 +45,7 @@ int main() {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     // portfolio::mock_data_feed mock_df;
-    portfolio::alphavantage_data_feed af("XYF32LEJHLVQ2MN2", false);
+    portfolio::alphavantage_data_feed af("demo", false);
     size_t periods = 12;
     //    portfolio::market_data md(assets, mock_df, mp_start, mp_end,
     //                              portfolio::timeframe::weekly);
@@ -60,7 +60,7 @@ int main() {
     pareto::front<double, 2, portfolio::portfolio> pareto_front_result;
     pareto_front_result = pareto::front<double, 2, portfolio::portfolio>(
         {pareto::min, pareto::max});
-    for (size_t i = 0; i < 100; ++i) { // 100
+    for (size_t i = 0; i < 10; ++i) { // 100
         fout << i << "\n";
         portfolio::portfolio port(prob);
         portfolio::evolutionary_algorithm solver(prob);

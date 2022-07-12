@@ -118,7 +118,9 @@ add_library(portfolio
         portfolio/problem/return/portfolio_return_mean.cpp
         portfolio/json/json.cpp portfolio/json/json.h
         portfolio/problem/return/portfolio_return_mean_cost.cpp
-        portfolio/problem/return/portfolio_return_mean_cost.h)
+        portfolio/problem/return/portfolio_return_mean_cost.h
+        portfolio/spea2_algorithm.h
+        portfolio/spea2_algorithm.cpp)
 target_include_directories(portfolio
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

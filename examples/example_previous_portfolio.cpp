@@ -48,7 +48,7 @@ int main() {
     portfolio::interval_points interval =
         std::make_pair(start_interval, end_interval);
     // portfolio::mock_data_feed mock_df;
-    portfolio::alphavantage_data_feed af("XYF32LEJHLVQ2MN2", false);
+    portfolio::alphavantage_data_feed af("demo", false);
     size_t periods = 12;
     //    portfolio::market_data md(assets, mock_df, mp_start, mp_end,
     //                              portfolio::timeframe::weekly);

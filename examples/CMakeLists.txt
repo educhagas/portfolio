@@ -17,3 +17,7 @@ target_exception_options(example_previous_portfolio)
 add_executable(example_cost_portfolio example_cost_portfolio.cpp)
 target_link_libraries(example_cost_portfolio PRIVATE portfolio pareto)
 target_exception_options(example_cost_portfolio)
+
+add_executable(example_evolutionary_algorithm_spea2 evolutionary_algorithm_spea2.cpp)
+target_link_libraries(example_evolutionary_algorithm_spea2 PRIVATE portfolio pareto)
+target_exception_options(example_evolutionary_algorithm_spea2)
